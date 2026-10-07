@@ -3,275 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Granny 3D Game - Bổn Mạng Escape</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
-        #crosshair {
-            position: absolute; top: 50%; left: 50%;
-            width: 10px; height: 10px;
-            background: white; border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none; z-index: 10;
-        }
-        #ui {
-            position: absolute; top: 20px; left: 20px;
-            color: white; font-size: 18px; text-shadow: 2px 2px 4px #000;
-            pointer-events: none; z-index: 10;
-        }
-        #instructions {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); color: white;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20; cursor: pointer;
-        }
-        #game-over {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(139,0,0,0.9); color: white;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 30;
-        }
-        button { padding: 12px 24px; font-size: 18px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
-    </style>
-    <!-- Nhập thư viện 3D Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-</head>
-<body>
-
-    <div id="crosshair"></div>
-    <div id="ui">
-        <div id="inventory">Túi đồ: Trống</div>
-        <div id="status">Nhiệm vụ: Tìm chìa khóa thoát hiểm!</div>
-    </div>
-
-    <div id="instructions">
-        <h1>BÀ NGOẠI GRANNY 3D</h1>
-        <p>Sử dụng <b>W, A, S, D</b> để Di chuyển</p>
-        <p>Sử dụng <b>Chuột</b> để Xoay góc nhìn</p>
-        <p>Nhấn <b>E</b> để Nhặt chìa khóa / Mở cửa</p>
-        <br>
-        <button>CLICK ĐỂ BẮT ĐẦU CHƠI</button>
-    </div>
-
-    <div id="game-over">
-        <h1 id="game-over-title">BẠN ĐÃ BỊ GRANNY BẮT!</h1>
-        <p id="game-over-desc">Bà ngoại đã phát hiện ra bạn...</p>
-        <button onclick="location.reload()">CHƠI LẠI</button>
-    </div>
-
-    <script>
-        // --- 1. KHỞI TẠO BỐ TRÍ 3D ---
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050505, 0.15); // Sương mù u tăm
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Ánh sáng
-        const ambientLight = new THREE.AmbientLight(0x222222);
-        scene.add(ambientLight);
-
-        // Đèn pin của người chơi
-        const flashlight = new THREE.SpotLight(0xffffff, 2, 15, Math.PI / 6, 0.5);
-        camera.add(flashlight);
-        flashlight.position.set(0, 0, 1);
-        flashlight.target = camera;
-        scene.add(camera);
-
-        // --- 2. XÂY DỰNG CĂN NHÀ ---
-        // Sàn nhà
-        const floorGeo = new THREE.PlaneGeometry(30, 30);
-        const floorMat = new THREE.MeshBasicMaterial({ color: 0x221100, side: THREE.DoubleSide });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = Math.PI / 2;
-        scene.add(floor);
-
-        // Tường
-        function createWall(x, z, w, h, d) {
-            const wallGeo = new THREE.BoxGeometry(w, h, d);
-            const wallMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-            const wall = new THREE.Mesh(wallGeo, wallMat);
-            wall.position.set(x, h / 2, z);
-            scene.add(wall);
-        }
-        createWall(0, -15, 30, 5, 1);
-        createWall(0, 15, 30, 5, 1);
-        createWall(-15, 0, 1, 5, 30);
-        createWall(15, 0, 1, 5, 30);
-
-        // Chìa khóa (Vật phẩm)
-        const keyGeo = new THREE.TorusGeometry(0.2, 0.05, 8, 100);
-        const keyMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-        const key = new THREE.Mesh(keyGeo, keyMat);
-        key.position.set(-8, 0.5, -8);
-        scene.add(key);
-
-        // Cửa lối thoát
-        const doorGeo = new THREE.BoxGeometry(2, 4, 0.2);
-        const doorMat = new THREE.MeshBasicMaterial({ color: 0x8b4513 });
-        const door = new THREE.Mesh(doorGeo, doorMat);
-        door.position.set(0, 2, 14.8);
-        scene.add(door);
-
-        // BÀ NGOẠI GRANNY (Mô hình quái vật)
-        const grannyGroup = new THREE.Group();
-        const bodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
-        const grannyMat = new THREE.MeshBasicMaterial({ color: 0x550000 }); // Váy đỏ thẫm
-        const body = new THREE.Mesh(bodyGeo, grannyMat);
-        body.position.y = 1;
-        grannyGroup.add(body);
-
-        const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
-        const headMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa }); // Đầu xám
-        const head = new THREE.Mesh(headGeo, headMat);
-        head.position.y = 2.2;
-        grannyGroup.add(head);
-
-        grannyGroup.position.set(8, 0, -8);
-        scene.add(grannyGroup);
-
-        // --- 3. BỘ ĐIỀU KHIỂN NGƯỜI CHƠI ---
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let hasKey = false;
-        let isGameOver = false;
-
-        camera.position.set(0, 1.6, 0);
-
-        // Khóa chuột điều khiển góc nhìn 3D
-        const instructions = document.getElementById('instructions');
-        instructions.addEventListener('click', () => {
-            document.body.requestPointerLock();
-        });
-
-        document.addEventListener('pointerlockchange', () => {
-            if (document.pointerLockElement === document.body) {
-                instructions.style.display = 'none';
-            } else if (!isGameOver) {
-                instructions.style.display = 'flex';
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (document.pointerLockElement === document.body && !isGameOver) {
-                camera.rotation.y -= e.movementX * 0.002;
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyW') moveForward = true;
-            if (e.code === 'KeyS') moveBackward = true;
-            if (e.code === 'KeyA') moveLeft = true;
-            if (e.code === 'KeyD') moveRight = true;
-            if (e.code === 'KeyE') interact();
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') moveForward = false;
-            if (e.code === 'KeyS') moveBackward = false;
-            if (e.code === 'KeyA') moveLeft = false;
-            if (e.code === 'KeyD') moveRight = false;
-        });
-
-        // Nhặt đồ / Mở cửa
-        function interact() {
-            const distToKey = camera.position.distanceTo(key.position);
-            if (distToKey < 3 && !hasKey) {
-                hasKey = true;
-                scene.remove(key);
-                document.getElementById('inventory').innerText = "Túi đồ: Chìa Khóa Cửa Chính";
-                document.getElementById('status').innerText = "Nhiệm vụ: Chạy đến Cửa Chính để thoát!";
-            }
-
-            const distToDoor = camera.position.distanceTo(door.position);
-            if (distToDoor < 3) {
-                if (hasKey) {
-                    endGame(true);
-                } else {
-                    document.getElementById('status').innerText = "Cửa đã khóa! Bạn cần tìm chìa khóa.";
-                }
-            }
-        }
-
-        // --- 4. LOGIC DI CHUYỂN BÀ NGOẠI VÀ GAME LOOP ---
-        function updateGranny() {
-            if (isGameOver) return;
-
-            // Granny đuổi theo người chơi
-            const dir = new THREE.Vector3().subVectors(camera.position, grannyGroup.position);
-            dir.y = 0; // Giữ Granny trên mặt đất
-            dir.normalize();
-            grannyGroup.position.add(dir.multiplyScalar(0.035)); // Tốc độ Granny
-            grannyGroup.lookAt(camera.position.x, 0, camera.position.z);
-
-            // Kiểm tra va chạm với Granny
-            if (camera.position.distanceTo(grannyGroup.position) < 1.2) {
-                endGame(false);
-            }
-        }
-
-        function endGame(won) {
-            isGameOver = true;
-            document.exitPointerLock();
-            const gameOverScreen = document.getElementById('game-over');
-            const title = document.getElementById('game-over-title');
-            const desc = document.getElementById('game-over-desc');
-
-            gameOverScreen.style.display = 'flex';
-            if (won) {
-                gameOverScreen.style.background = 'rgba(0, 100, 0, 0.9)';
-                title.innerText = 'BẠN ĐÃ THOÁT KHỎI GRANNY!';
-                desc.innerText = 'Chúc mừng bạn đã sống sót khỏi căn nhà ma quái!';
-            } else {
-                gameOverScreen.style.background = 'rgba(139, 0, 0, 0.9)';
-                title.innerText = 'BẠN ĐÃ BỊ GRANNY BẮT!';
-                desc.innerText = 'Bà ngoại đã bắt được bạn...';
-            }
-        }
-
-        // Vòng lặp cập nhật Game
-        function animate() {
-            requestAnimationFrame(animate);
-
-            if (document.pointerLockElement === document.body && !isGameOver) {
-                // Di chuyển người chơi
-                const speed = 0.08;
-                const dir = new THREE.Vector3();
-                
-                if (moveForward) camera.translateZ(-speed);
-                if (moveBackward) camera.translateZ(speed);
-                if (moveLeft) camera.translateX(-speed);
-                if (moveRight) camera.translateX(speed);
-                camera.position.y = 1.6; // Giữ độ cao tầm mắt
-
-                // Xoay nhẹ chìa khóa tạo hiệu ứng
-                if (!hasKey) key.rotation.y += 0.02;
-
-                updateGranny();
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Xử lý co giãn màn hình
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Granny 3D - Góc Nhìn 360 Độ</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; user-select: none; }
         #crosshair {
             position: absolute; top: 50%; left: 50%;
             width: 8px; height: 8px;
@@ -288,7 +22,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); color: white;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20; cursor: pointer;
+            z-index: 20;
         }
         #game-over {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -296,9 +30,21 @@
             display: none; flex-direction: column; justify-content: center; align-items: center;
             z-index: 30;
         }
-        button { padding: 12px 24px; font-size: 18px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 5px; }
+        #start-btn, button { 
+            padding: 14px 28px; 
+            font-size: 20px; 
+            font-weight: bold;
+            cursor: pointer; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            margin-top: 15px;
+            z-index: 25;
+        }
+        #start-btn:hover { background: #45a049; }
     </style>
-    <!-- Nhập Three.js và PointerLockControls để xoay 360 độ -->
+    <!-- Nhập Three.js và PointerLockControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 </head>
@@ -316,7 +62,7 @@
         <p>Di chuyển <b>Chuột</b> để xoay góc nhìn <b>360 độ</b> (Nhìn lên/xuống/xung quanh)</p>
         <p>Nhấn <b>E</b> để Nhặt chìa khóa / Mở cửa</p>
         <br>
-        <button>CLICK ĐỂ BẮT ĐẦU CHƠI</button>
+        <button id="start-btn">CLICK ĐỂ BẮT ĐẦU CHƠI</button>
     </div>
 
     <div id="game-over">
@@ -402,15 +148,23 @@
         grannyGroup.position.set(8, 0, -8);
         scene.add(grannyGroup);
 
-        // --- 3. ĐIỀU KHIỂN & BẮT SỰ KIỆN ---
+        // --- 3. ĐIỀU KHIỂN & BẮT SỰ KIỆN NÚT CLICK ---
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let hasKey = false, isGameOver = false;
 
         controls.getObject().position.set(0, 1.6, 0);
 
         const instructions = document.getElementById('instructions');
+        const startBtn = document.getElementById('start-btn');
+
+        // Bắt sự kiện click trực tiếp vào nút hoặc bảng hướng dẫn
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            controls.lock();
+        });
+
         instructions.addEventListener('click', () => {
-            controls.lock(); // Bật xoay 360 độ bằng chuột
+            controls.lock();
         });
 
         controls.addEventListener('lock', () => {
@@ -441,7 +195,6 @@
         function interact() {
             const playerPos = controls.getObject().position;
             
-            // Tương tác nhặt chìa khóa
             if (playerPos.distanceTo(key.position) < 3 && !hasKey) {
                 hasKey = true;
                 scene.remove(key);
@@ -449,7 +202,6 @@
                 document.getElementById('status').innerText = "Nhiệm vụ: Chạy đến Cửa Chính để thoát!";
             }
 
-            // Tương tác mở cửa
             if (playerPos.distanceTo(door.position) < 3) {
                 if (hasKey) {
                     endGame(true);
@@ -485,7 +237,7 @@
             if (won) {
                 gameOverScreen.style.background = 'rgba(0, 100, 0, 0.9)';
                 title.innerText = 'BẠN ĐÃ THOÁT KHỎI GRANNY!';
-                desc.innerText = 'Chúc mừng bạn đã sống sót khỏi căn nhà ma quái!';
+                desc.innerText = 'Chúc mừng bạn đã sống sót!';
             } else {
                 gameOverScreen.style.background = 'rgba(139, 0, 0, 0.9)';
                 title.innerText = 'BẠN ĐÃ BỊ GRANNY BẮT!';
