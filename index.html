@@ -2,275 +2,249 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Granny 3D - Góc Nhìn 360 Độ</title>
+    <title>Granny Hammer Horror 3D</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; user-select: none; }
-        #crosshair {
-            position: absolute; top: 50%; left: 50%;
-            width: 8px; height: 8px;
-            background: rgba(255, 255, 255, 0.8); border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none; z-index: 10;
-        }
-        #ui {
-            position: absolute; top: 20px; left: 20px;
-            color: white; font-size: 18px; text-shadow: 2px 2px 4px #000;
-            pointer-events: none; z-index: 10;
-        }
-        #instructions {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); color: white;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 20;
-        }
-        #game-over {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(139,0,0,0.9); color: white;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 30;
-        }
-        #start-btn, button { 
-            padding: 14px 28px; 
-            font-size: 20px; 
-            font-weight: bold;
-            cursor: pointer; 
-            background: #4CAF50; 
-            color: white; 
-            border: none; 
-            border-radius: 6px; 
-            margin-top: 15px;
-            z-index: 25;
-        }
-        #start-btn:hover { background: #45a049; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; user-select: none; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: #ff0000; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
+        #ui { position: absolute; top: 15px; left: 15px; color: #fff; pointer-events: none; z-index: 10; text-shadow: 1px 1px 2px #000; }
+        #instructions, #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; }
+        #game-over { display: none; background: rgba(100,0,0,0.95); z-index: 30; }
+        button { padding: 12px 24px; font-size: 18px; cursor: pointer; background: #8b0000; color: #fff; border: 1px solid #ff0000; border-radius: 5px; margin-top: 15px; font-weight: bold; }
     </style>
-    <!-- Nhập Three.js và PointerLockControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 </head>
 <body>
-
     <div id="crosshair"></div>
     <div id="ui">
         <div id="inventory">Túi đồ: Trống</div>
         <div id="status">Nhiệm vụ: Tìm chìa khóa thoát hiểm!</div>
     </div>
-
     <div id="instructions">
-        <h1>BÀ NGOẠI GRANNY 3D (XOAY 360°)</h1>
-        <p>Sử dụng <b>W, A, S, D</b> để Di chuyển</p>
-        <p>Di chuyển <b>Chuột</b> để xoay góc nhìn <b>360 độ</b> (Nhìn lên/xuống/xung quanh)</p>
-        <p>Nhấn <b>E</b> để Nhặt chìa khóa / Mở cửa</p>
-        <br>
-        <button id="start-btn">CLICK ĐỂ BẮT ĐẦU CHƠI</button>
+        <h1 style="color:#ff0000;">QUÁI VẬT BÚA MA THUẬT 3D</h1>
+        <p><b>W, A, S, D</b>: Di chuyển | <b>Chuột</b>: Xoay 360° | <b>E</b>: Nhặt chìa khóa / Mở cửa</p>
+        <p style="color:#ff4444;">⚠️ Tránh xa con quái vật cầm búa! Chạm vào là CHẾT!</p>
+        <button id="start-btn">BẮT ĐẦU CHƠI</button>
     </div>
-
     <div id="game-over">
-        <h1 id="game-over-title">BẠN ĐÃ BỊ GRANNY BẮT!</h1>
-        <p id="game-over-desc">Bà ngoại đã phát hiện ra bạn...</p>
+        <h1 id="go-title" style="color:#ff0000; font-size: 40px;">BẠN ĐÃ BỊ BÚA ĐẬP NỔ ĐẦU!</h1>
         <button onclick="location.reload()">CHƠI LẠI</button>
     </div>
 
     <script>
-        // --- 1. KHỞI TẠO BỐ TRÍ 3D ---
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050505, 0.15);
-
+        scene.fog = new THREE.FogExp2(0x050000, 0.18); // Sương mù đỏ đen kinh dị
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Bộ điều khiển xoay 360 độ
         const controls = new THREE.PointerLockControls(camera, document.body);
+        scene.add(new THREE.AmbientLight(0x221111));
 
-        // Ánh sáng
-        const ambientLight = new THREE.AmbientLight(0x222222);
-        scene.add(ambientLight);
-
-        // Đèn pin gắn theo góc nhìn camera
-        const flashlight = new THREE.SpotLight(0xffffff, 2.5, 18, Math.PI / 5, 0.5);
-        camera.add(flashlight);
-        flashlight.position.set(0, 0, 0.1);
-        flashlight.target.position.set(0, 0, -1);
-        camera.add(flashlight.target);
+        // Đèn pin
+        const light = new THREE.SpotLight(0xffffff, 2.5, 15, Math.PI/6);
+        camera.add(light);
+        light.position.set(0,0,0.1);
+        light.target.position.set(0,0,-1);
+        camera.add(light.target);
         scene.add(controls.getObject());
 
-        // --- 2. TẠO KHU VỰC CHƠI ---
-        // Sàn nhà
-        const floorGeo = new THREE.PlaneGeometry(30, 30);
-        const floorMat = new THREE.MeshBasicMaterial({ color: 0x221100, side: THREE.DoubleSide });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = Math.PI / 2;
-        scene.add(floor);
+        // Sàn nhà & Tường kinh dị
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(30,30), new THREE.MeshBasicMaterial({color: 0x110505}));
+        floor.rotation.x = -Math.PI/2; scene.add(floor);
 
-        // Tường
-        function createWall(x, z, w, h, d) {
-            const wallGeo = new THREE.BoxGeometry(w, h, d);
-            const wallMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-            const wall = new THREE.Mesh(wallGeo, wallMat);
-            wall.position.set(x, h / 2, z);
-            scene.add(wall);
+        function makeWall(x,z,w,d) {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(w, 4, d), new THREE.MeshBasicMaterial({color: 0x221111}));
+            m.position.set(x, 2, z); scene.add(m);
         }
-        createWall(0, -15, 30, 5, 1);
-        createWall(0, 15, 30, 5, 1);
-        createWall(-15, 0, 1, 5, 30);
-        createWall(15, 0, 1, 5, 30);
+        makeWall(0,-15,30,1); makeWall(0,15,30,1); makeWall(-15,0,1,30); makeWall(15,0,1,30);
 
-        // Chìa khóa
-        const keyGeo = new THREE.TorusGeometry(0.2, 0.05, 8, 100);
-        const keyMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-        const key = new THREE.Mesh(keyGeo, keyMat);
-        key.position.set(-8, 0.5, -8);
-        scene.add(key);
+        // Chìa khóa vàng & Cửa gỗ
+        const key = new THREE.Mesh(new THREE.TorusGeometry(0.2,0.05,8,16), new THREE.MeshBasicMaterial({color: 0xffd700}));
+        key.position.set(-8,0.5,-8); scene.add(key);
+        const door = new THREE.Mesh(new THREE.BoxGeometry(2,4,0.2), new THREE.MeshBasicMaterial({color: 0x5a2d0c}));
+        door.position.set(0,2,14.8); scene.add(door);
 
-        // Cửa lối thoát
-        const doorGeo = new THREE.BoxGeometry(2, 4, 0.2);
-        const doorMat = new THREE.MeshBasicMaterial({ color: 0x8b4513 });
-        const door = new THREE.Mesh(doorGeo, doorMat);
-        door.position.set(0, 2, 14.8);
-        scene.add(door);
+        // --- MÔ HÌNH QUÁI VẬT CẦM BÚA KINH DỊ ---
+        const monster = new THREE.Group();
+        
+        // Thân quái vật (Đen máu)
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.4, 2.2), new THREE.MeshBasicMaterial({color: 0x111111}));
+        body.position.y = 1.1; monster.add(body);
+        
+        // Đầu quái vật màu quỷ đỏ + Mắt đỏ rực
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshBasicMaterial({color: 0x660000}));
+        head.position.y = 2.4; monster.add(head);
+        const eye = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.2), new THREE.MeshBasicMaterial({color: 0xff0000}));
+        eye.position.set(0, 2.45, 0.3); monster.add(eye);
 
-        // BÀ NGOẠI GRANNY
-        const grannyGroup = new THREE.Group();
-        const bodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
-        const grannyMat = new THREE.MeshBasicMaterial({ color: 0x550000 });
-        const body = new THREE.Mesh(bodyGeo, grannyMat);
-        body.position.y = 1;
-        grannyGroup.add(body);
+        // CÂY BÚA KINH DỊ
+        const hammerGroup = new THREE.Group();
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), new THREE.MeshBasicMaterial({color: 0x4a2e00})); // Cán búa
+        handle.position.y = 0.8; hammerGroup.add(handle);
+        const headHammer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.8), new THREE.MeshBasicMaterial({color: 0x555555})); // Đầu búa kim loại
+        headHammer.position.set(0, 1.4, 0); hammerGroup.add(headHammer);
+        
+        hammerGroup.position.set(0.6, 0.8, 0.2);
+        hammerGroup.rotation.x = Math.PI / 4; // Cầm búa giơ lên sẵn sàng đập
+        monster.add(hammerGroup);
 
-        const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
-        const headMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
-        const head = new THREE.Mesh(headGeo, headMat);
-        head.position.y = 2.2;
-        grannyGroup.add(head);
+        monster.position.set(8, 0, -8); 
+        scene.add(monster);
 
-        grannyGroup.position.set(8, 0, -8);
-        scene.add(grannyGroup);
-
-        // --- 3. ĐIỀU KHIỂN & BẮT SỰ KIỆN NÚT CLICK ---
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let hasKey = false, isGameOver = false;
-
+        let moveF = false, moveB = false, moveL = false, moveR = false, hasKey = false, gameOver = false;
         controls.getObject().position.set(0, 1.6, 0);
 
-        const instructions = document.getElementById('instructions');
-        const startBtn = document.getElementById('start-btn');
-
-        // Bắt sự kiện click trực tiếp vào nút hoặc bảng hướng dẫn
-        startBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            controls.lock();
-        });
-
-        instructions.addEventListener('click', () => {
-            controls.lock();
-        });
-
-        controls.addEventListener('lock', () => {
-            instructions.style.display = 'none';
-        });
-
-        controls.addEventListener('unlock', () => {
-            if (!isGameOver) {
-                instructions.style.display = 'flex';
-            }
-        });
+        document.getElementById('start-btn').addEventListener('click', () => controls.lock());
+        controls.addEventListener('lock', () => document.getElementById('instructions').style.display = 'none');
+        controls.addEventListener('unlock', () => { if(!gameOver) document.getElementById('instructions').style.display = 'flex'; });
 
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyW') moveForward = true;
-            if (e.code === 'KeyS') moveBackward = true;
-            if (e.code === 'KeyA') moveLeft = true;
-            if (e.code === 'KeyD') moveRight = true;
-            if (e.code === 'KeyE') interact();
+            if(e.code==='KeyW') moveF=true; if(e.code==='KeyS') moveB=true;
+            if(e.code==='KeyA') moveL=true; if(e.code==='KeyD') moveR=true;
+            if(e.code==='KeyE') interact();
         });
-
         document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') moveForward = false;
-            if (e.code === 'KeyS') moveBackward = false;
-            if (e.code === 'KeyA') moveLeft = false;
-            if (e.code === 'KeyD') moveRight = false;
+            if(e.code==='KeyW') moveF=false; if(e.code==='KeyS') moveB=false;
+            if(e.code==='KeyA') moveL=false; if(e.code==='KeyD') moveR=false;
         });
 
         function interact() {
-            const playerPos = controls.getObject().position;
-            
-            if (playerPos.distanceTo(key.position) < 3 && !hasKey) {
-                hasKey = true;
-                scene.remove(key);
-                document.getElementById('inventory').innerText = "Túi đồ: Chìa Khóa Cửa Chính";
-                document.getElementById('status').innerText = "Nhiệm vụ: Chạy đến Cửa Chính để thoát!";
+            const p = controls.getObject().position;
+            if(p.distanceTo(key.position) < 2.5 && !hasKey) {
+                hasKey = true; scene.remove(key);
+                document.getElementById('inventory').innerText = "Túi đồ: Chìa Khóa Cửa";
+                document.getElementById('status').innerText = "Chạy nhanh ra Cửa Chính!";
             }
-
-            if (playerPos.distanceTo(door.position) < 3) {
-                if (hasKey) {
-                    endGame(true);
-                } else {
-                    document.getElementById('status').innerText = "Cửa đã khóa! Bạn cần tìm chìa khóa.";
-                }
+            if(p.distanceTo(door.position) < 2.5) {
+                if(hasKey) endGame(true);
+                else document.getElementById('status').innerText = "Cửa đang khóa!";
             }
         }
 
-        function updateGranny() {
-            if (isGameOver) return;
-            const playerPos = controls.getObject().position;
-
-            const dir = new THREE.Vector3().subVectors(playerPos, grannyGroup.position);
-            dir.y = 0;
-            dir.normalize();
-            grannyGroup.position.add(dir.multiplyScalar(0.035));
-            grannyGroup.lookAt(playerPos.x, 0, playerPos.z);
-
-            if (playerPos.distanceTo(grannyGroup.position) < 1.2) {
-                endGame(false);
-            }
+        function endGame(win) {
+            gameOver = true; controls.unlock();
+            const go = document.getElementById('game-over');
+            go.style.display = 'flex';
+            document.getElementById('go-title').innerText = win ? "BẠN ĐÃ THOÁT KHỎI QUÁI VẬT!" : "BẠN ĐÃ BỊ BÚA ĐẬP CHẾT!";
         }
 
-        function endGame(won) {
-            isGameOver = true;
-            controls.unlock();
-            const gameOverScreen = document.getElementById('game-over');
-            const title = document.getElementById('game-over-title');
-            const desc = document.getElementById('game-over-desc');
-
-            gameOverScreen.style.display = 'flex';
-            if (won) {
-                gameOverScreen.style.background = 'rgba(0, 100, 0, 0.9)';
-                title.innerText = 'BẠN ĐÃ THOÁT KHỎI GRANNY!';
-                desc.innerText = 'Chúc mừng bạn đã sống sót!';
-            } else {
-                gameOverScreen.style.background = 'rgba(139, 0, 0, 0.9)';
-                title.innerText = 'BẠN ĐÃ BỊ GRANNY BẮT!';
-                desc.innerText = 'Bà ngoại đã bắt được bạn...';
-            }
-        }
-
-        // --- 4. GAME LOOP ---
+        let swing = 0;
         function animate() {
             requestAnimationFrame(animate);
+            if (controls.isLocked && !gameOver) {
+                if (moveF) controls.moveForward(0.08); if (moveB) controls.moveForward(-0.08);
+                if (moveL) controls.moveRight(-0.08); if (moveR) controls.moveRight(0.08);
 
-            if (controls.isLocked && !isGameOver) {
-                const speed = 0.08;
-                if (moveForward) controls.moveForward(speed);
-                if (moveBackward) controls.moveForward(-speed);
-                if (moveLeft) controls.moveRight(-speed);
-                if (moveRight) controls.moveRight(speed);
+                const p = controls.getObject().position;
+                const dir = new THREE.Vector3().subVectors(p, monster.position).setY(0).normalize();
+                
+                // Quái vật đuổi theo bạn
+                monster.position.add(dir.multiplyScalar(0.038)); // Tốc độ chạy của quái
+                monster.lookAt(p.x, 0, p.z);
 
-                if (!hasKey) key.rotation.y += 0.02;
+                // Tạo hiệu ứng vung búa liên tục khi chạy
+                swing += 0.1;
+                hammerGroup.rotation.z = Math.sin(swing) * 0.3;
 
-                updateGranny();
+                // KIỂM TRA CHẠM VÀO QUÁI VẬT LÀ CHẾT
+                if (p.distanceTo(monster.position) < 1.4) {
+                    endGame(false);
+                }
             }
-
             renderer.render(scene, camera);
         }
-
         animate();
+    </script>
+</body>
+</html>
+const key = new THREE.Mesh(new THREE.TorusGeometry(0.2,0.05,8,16), new THREE.MeshBasicMaterial({color: 0xffd700}));
+        key.position.set(-8,0.5,-8); scene.add(key);
+        const door = new THREE.Mesh(new THREE.BoxGeometry(2,4,0.2), new THREE.MeshBasicMaterial({color: 0x5a2d0c}));
+        door.position.set(0,2,14.8); scene.add(door);
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        const monster = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.4, 2.2), new THREE.MeshBasicMaterial({color: 0x111111}));
+        body.position.y = 1.1; monster.add(body);
+        
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshBasicMaterial({color: 0x660000}));
+        head.position.y = 2.4; monster.add(head);
+        const eye = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.2), new THREE.MeshBasicMaterial({color: 0xff0000}));
+        eye.position.set(0, 2.45, 0.3); monster.add(eye);
+
+        const hammerGroup = new THREE.Group();
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), new THREE.MeshBasicMaterial({color: 0x4a2e00}));
+        handle.position.y = 0.8; hammerGroup.add(handle);
+        const headHammer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.3, 0.8), new THREE.MeshBasicMaterial({color: 0x555555}));
+        headHammer.position.set(0, 1.4, 0); hammerGroup.add(headHammer);
+        
+        hammerGroup.position.set(0.6, 0.8, 0.2);
+        hammerGroup.rotation.x = Math.PI / 4;
+        monster.add(hammerGroup);
+        monster.position.set(8, 0, -8); 
+        scene.add(monster);
+
+        let moveF = false, moveB = false, moveL = false, moveR = false, hasKey = false, gameOver = false;
+        controls.getObject().position.set(0, 1.6, 0);
+
+        document.getElementById('start-btn').addEventListener('click', () => controls.lock());
+        controls.addEventListener('lock', () => document.getElementById('instructions').style.display = 'none');
+        controls.addEventListener('unlock', () => { if(!gameOver) document.getElementById('instructions').style.display = 'flex'; });
+
+        document.addEventListener('keydown', (e) => {
+            if(e.code==='KeyW') moveF=true; if(e.code==='KeyS') moveB=true;
+            if(e.code==='KeyA') moveL=true; if(e.code==='KeyD') moveR=true;
+            if(e.code==='KeyE') interact();
         });
+        document.addEventListener('keyup', (e) => {
+            if(e.code==='KeyW') moveF=false; if(e.code==='KeyS') moveB=false;
+            if(e.code==='KeyA') moveL=false; if(e.code==='KeyD') moveR=false;
+        });
+
+        function interact() {
+            const p = controls.getObject().position;
+            if(p.distanceTo(key.position) < 2.5 && !hasKey) {
+                hasKey = true; scene.remove(key);
+                document.getElementById('inventory').innerText = "Túi đồ: Chìa Khóa Cửa";
+                document.getElementById('status').innerText = "Chạy nhanh ra Cửa Chính!";
+            }
+            if(p.distanceTo(door.position) < 2.5) {
+                if(hasKey) endGame(true);
+                else document.getElementById('status').innerText = "Cửa đang khóa!";
+            }
+        }
+
+        function endGame(win) {
+            gameOver = true; controls.unlock();
+            const go = document.getElementById('game-over');
+            go.style.display = 'flex';
+            document.getElementById('go-title').innerText = win ? "BẠN ĐÃ THOÁT KHỎI QUÁI VẬT!" : "BẠN ĐÃ BỊ BÚA ĐẬP CHẾT!";
+        }
+
+        let swing = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls.isLocked && !gameOver) {
+                if (moveF) controls.moveForward(0.08); if (moveB) controls.moveForward(-0.08);
+                if (moveL) controls.moveRight(-0.08); if (moveR) controls.moveRight(0.08);
+
+                const p = controls.getObject().position;
+                const dir = new THREE.Vector3().subVectors(p, monster.position).setY(0).normalize();
+                
+                monster.position.add(dir.multiplyScalar(0.038));
+                monster.lookAt(p.x, 0, p.z);
+
+                swing += 0.1;
+                hammerGroup.rotation.z = Math.sin(swing) * 0.3;
+
+                if (p.distanceTo(monster.position) < 1.4) {
+                    endGame(false);
+                }
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
     </script>
 </body>
 </html>
