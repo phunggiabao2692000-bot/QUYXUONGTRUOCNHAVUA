@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ngày 1??? - Menu</title>
+<style>
+  body{margin:0;overflow:hidden;background:#000;font-family:'Segoe UI',Roboto,Arial,sans-serif;user-select:none}
+  #menu{position:absolute;inset:0;overflow:hidden;background:#0a0908}
+  #bg{position:absolute;inset:0;animation:fl 7s infinite;background:radial-gradient(ellipse at 55% 40%,#4a463f 0%,#23201c 55%,#0b0a09 100%)}
+  #floor{position:absolute;left:0;right:0;bottom:0;height:20%;background:repeating-linear-gradient(90deg,#1b1713 0 38px,#120f0c 38px 42px)}
+  #stairs{position:absolute;right:0;bottom:0;width:26%;height:52%;background:#0d0b0a;clip-path:polygon(0 100%,100% 0,100% 100%)}
+  #doorway{position:absolute;left:40%;bottom:18%;width:27%;height:70%;box-sizing:border-box;border:14px solid #4a3522;border-bottom:0;background:linear-gradient(#171513,#38342e)}
+  #monster{position:absolute;left:50%;bottom:0;height:92%;transform:translateX(-50%);filter:drop-shadow(0 0 18px rgba(255,255,255,.08))}
+  #shade{position:absolute;inset:0;background:radial-gradient(circle at 55% 50%,transparent 30%,rgba(0,0,0,.85) 100%)}
+  @keyframes fl{0%,100%{opacity:1}92%{opacity:.88}95%{opacity:1}97%{opacity:.72}}
+  @media (prefers-reduced-motion:reduce){#bg{animation:none}}
+  #gtitle{position:absolute;top:22px;right:30px;color:#a00;font-size:30px;letter-spacing:6px;text-shadow:0 0 10px #000}
+  #mbox{position:absolute;left:9%;top:14%}
+  .mbtn{display:block;width:250px;min-height:60px;background:#111114;color:#fff;border:0;border-radius:0;font-family:inherit;font-size:36px;padding:8px 0;margin:0;cursor:pointer;text-align:center;letter-spacing:1px}
+  .mbtn:hover,.mbtn:focus-visible{background:#2a0a0a;outline:2px solid #a00}
+  #cont{width:250px;text-align:center;color:#fff;font-size:24px;margin:2px 0 28px;text-shadow:0 0 6px #000;min-height:30px}
+  #set{margin-top:16px}
+  #langsw{position:relative;display:flex;width:180px;height:70px;margin:28px 0 0 34px;border:4px solid #8a8a8a;border-radius:35px;overflow:hidden;cursor:pointer;box-sizing:border-box}
+  #langsw div.l{flex:1;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
+  #lv{background:#c8102e;color:#ffde00}#le{background:#1b2f6b;color:#fff}
+  #knob{position:absolute;top:3px;left:calc(100% - 59px);width:56px;height:56px;border-radius:50%;background:#fff;transition:left .2s}
+  #langsw.en #knob{left:3px}
+  #hint{position:absolute;bottom:14px;width:100%;text-align:center;color:#aaa;font-size:14px;text-shadow:0 0 6px #000}
+  @media (max-width:700px){#mbox{left:50%;transform:translateX(-50%)}#doorway{opacity:.4}}
+
+  #setp{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.78);align-items:center;justify-content:center}
+  #setp.on{display:flex}
+  #setbox{width:min(420px,88vw);background:#111114;border:1px solid #522;padding:22px 26px;color:#ddd}
+  #setbox h2{margin:0 0 10px;color:#b00;letter-spacing:3px;font-size:26px}
+  #setbox label{display:block;margin:14px 0;font-size:16px}
+  #setbox label>span{display:flex;justify-content:space-between;margin-bottom:6px}
+  #setbox input[type=range]{width:100%;accent-color:#a00}
+  #setbox .chk{display:flex;align-items:center;gap:10px}
+  #setbox .chk>span{display:inline;margin:0}
+  .sbtn{padding:10px 22px;font-size:18px;cursor:pointer;background:#600;color:#fff;border:1px solid #c00;font-family:inherit;margin:8px 8px 0 0}
+  .sbtn:hover{background:#800}
+</style>
+</head>
+<body>
+<div id="menu">
+  <div id="bg">
+    <div id="floor"></div><div id="stairs"></div>
+    <div id="doorway">
+      <svg id="monster" viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9c7bf"/><stop offset="1" stop-color="#4b4944"/></linearGradient></defs>
+        <path d="M68 118 L132 118 L168 420 L32 420 Z" fill="url(#gw)"/>
+        <line x1="132" y1="135" x2="146" y2="285" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
+        <line x1="68" y1="135" x2="52" y2="262" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
+        <line x1="40" y1="280" x2="80" y2="185" stroke="#7a4e24" stroke-width="10" stroke-linecap="round"/>
+        <line x1="64" y1="222" x2="80" y2="185" stroke="#8a0000" stroke-width="11" stroke-linecap="round"/>
+        <ellipse cx="100" cy="86" rx="27" ry="33" fill="#cbc3b6"/>
+        <path d="M72 80 Q100 38 128 80 L128 66 Q100 28 72 66 Z" fill="#8f8a82"/>
+        <circle cx="90" cy="84" r="4.5" fill="#fff"/><circle cx="110" cy="84" r="4.5" fill="#fff"/>
+        <circle cx="90" cy="84" r="1.6" fill="#a00"/><circle cx="110" cy="84" r="1.6" fill="#a00"/>
+        <ellipse cx="100" cy="110" rx="6" ry="9" fill="#2a0808"/>
+      </svg>
+    </div>
+    <div id="shade"></div>
+  </div>
+  <div id="gtitle"></div>
+  <div id="mbox">
+    <button class="mbtn" id="play"></button>
+    <div id="cont"></div>
+    <button class="mbtn" id="neu"></button>
+    <button class="mbtn" id="set"></button>
+    <div id="langsw" role="button" tabindex="0" aria-label="Language">
+      <div class="l" id="lv">★</div><div class="l" id="le">EN</div><div id="knob"></div>
+    </div>
+  </div>
+  <div id="hint"></div>
+
+  <div id="setp">
+    <div id="setbox">
+      <h2 id="settitle"></h2>
+      <div id="setrows"></div>
+      <button class="sbtn" id="setreset"></button><button class="sbtn" id="setback"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const GAME_URL = 'index.html'; // file game
+
+let day = 1, lang = 'vi';
+const DEF = { vol: 70, sens: 100, bri: 100, fov: 75, shake: true };
+let S = { ...DEF };
+try {
+  day = +localStorage.getItem('gh_day') || 1;
+  lang = localStorage.getItem('gh_lang') || 'vi';
+  Object.assign(S, JSON.parse(localStorage.getItem('gh_set') || '{}'));
+} catch (e) {}
+
+const TX = {
+  vi: { title:'NGÀY {d}???', play:'CHƠI', cont:'Tiếp tục · Ngày {d}', neu:'GAME MỚI', set:'CÀI ĐẶT',
+    vol:'Âm lượng', sens:'Độ nhạy chuột', bri:'Độ sáng môi trường', fov:'Tầm nhìn (FOV)',
+    shake:'Rung màn hình khi quái ở gần', back:'XONG', reset:'Mặc định',
+    hint:'W A S D di chuyển  |  Chuột nhìn  |  Shift chạy  |  F đèn pin  |  E nhặt / mở cửa' },
+  en: { title:'DAY {d}???', play:'PLAY', cont:'Continue · Day {d}', neu:'NEW GAME', set:'SETTINGS',
+    vol:'Volume', sens:'Mouse sensitivity', bri:'Ambient brightness', fov:'Field of view',
+    shake:'Screen shake near monster', back:'DONE', reset:'Reset',
+    hint:'W A S D move  |  Mouse look  |  Shift run  |  F flashlight  |  E pick up / open' }
+};
+const tr = k => TX[lang][k];
+
+const ROWS = [['vol', 0, 100, '%'], ['sens', 20, 300, '%'], ['bri', 25, 400, '%'], ['fov', 60, 100, '°']];
+$('setrows').innerHTML = ROWS.map(([id, mn, mx]) =>
+  `<label><span><span id="l_${id}"></span><b id="v_${id}"></b></span><input type="range" id="i_${id}" min="${mn}" max="${mx}"></label>`
+).join('') + '<label class="chk"><input type="checkbox" id="i_shake"><span id="l_shake"></span></label>';
+ROWS.forEach(([id]) => $('i_' + id).oninput = e => { S[id] = +e.target.value; render(); });
+$('i_shake').onchange = e => { S.shake = e.target.checked; render(); };
+
+function render() {
+  document.documentElement.lang = lang;
+  $('gtitle').innerText = tr('title').replace('{d}', day);
+  $('play').innerText = tr('play');
+  $('cont').innerText = tr('cont').replace('{d}', day);
+  $('neu').innerText = tr('neu');
+  $('set').innerText = tr('set');
+  $('hint').innerText = tr('hint');
+  $('langsw').className = lang;
+  ROWS.forEach(([id, , , u]) => { $('i_' + id).value = S[id]; $('v_' + id).innerText = S[id] + u; $('l_' + id).innerText = tr(id); });
+  $('i_shake').checked = S.shake; $('l_shake').innerText = tr('shake');
+  $('settitle').innerText = tr('set'); $('setback').innerText = tr('back'); $('setreset').innerText = tr('reset');
+  save('gh_set', JSON.stringify(S));
+}
+
+// Đánh dấu "đã đi qua menu" rồi chuyển sang game
+const go = () => { try { sessionStorage.setItem('gh_menu', '1'); } catch (e) {} location.href = GAME_URL; };
+$('play').onclick = go;
+$('neu').onclick = () => { day = 1; save('gh_day', 1); go(); };
+$('set').onclick = () => $('setp').classList.add('on');
+$('setback').onclick = () => $('setp').classList.remove('on');
+$('setreset').onclick = () => { S = { ...DEF }; render(); };
+const toggleLang = () => { lang = lang === 'vi' ? 'en' : 'vi'; save('gh_lang', lang); render(); };
+$('langsw').onclick = toggleLang;
+$('langsw').onkeydown = e => { if (e.code === 'Enter' || e.code === 'Space') toggleLang(); };
+render();
+</script>
+</body>
+</html>
