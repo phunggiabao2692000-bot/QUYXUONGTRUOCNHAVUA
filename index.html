@@ -297,7 +297,691 @@ function update(dt) {
   let msg = '';
   if (!hasKey && near(key, 2.4)) msg = '[E] Nhặt chìa khóa';
   else if (batteries.some(b => near(b, 2))) msg = '[E] Nhặt pin';
-  if (doorDist() < 3.4) msg = hasKey ? '[E] Mở cửa thoát hiểm' : 'Cửa đang khóa';
+  if (doorDist() < 3.4) msg = hasKey ? '[E] Cửa thoát hiểm' : 'Cửa đang khóa';
+  $('prompt').innerText = msg;
+  $('stam').style.width = stamina * 100 + '%';
+  $('bat').style.width = battery * 100 + '%';
+}
+(function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .05);
+  if (controls.isLocked && !gameOver) update(dt);
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ngày 1??? - Horror 3D</title>
+<style>
+  body{margin:0;overflow:hidden;background:#000;font-family:'Segoe UI',Roboto,Arial,sans-serif;user-select:none}
+  #crosshair{position:absolute;top:50%;left:50%;width:5px;height:5px;background:#c00;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:10}
+  #ui{position:absolute;top:15px;left:15px;color:#ddd;pointer-events:none;z-index:10;text-shadow:1px 1px 2px #000;font-size:15px}
+  .bar{width:170px;height:8px;background:#2a2020;margin-top:6px;border:1px solid #442}
+  .bar i{display:block;height:100%;width:100%}
+  #stam{background:#c9a227}#bat{background:#e8e0b0}
+  #prompt{position:absolute;bottom:14%;width:100%;text-align:center;color:#fff;font-size:20px;text-shadow:0 0 6px #000;z-index:10;pointer-events:none}
+  #vignette{position:absolute;inset:0;pointer-events:none;z-index:9;opacity:0;background:radial-gradient(circle,transparent 35%,rgba(150,0,0,.9) 100%)}
+
+  /* ----- Màn hình chờ ----- */
+  #menu{position:absolute;inset:0;z-index:20;overflow:hidden;background:#0a0908}
+  #bg{position:absolute;inset:0;animation:fl 7s infinite;
+      background:radial-gradient(ellipse at 55% 40%,#4a463f 0%,#23201c 55%,#0b0a09 100%)}
+  #floor{position:absolute;left:0;right:0;bottom:0;height:20%;
+      background:repeating-linear-gradient(90deg,#1b1713 0 38px,#120f0c 38px 42px)}
+  #stairs{position:absolute;right:0;bottom:0;width:26%;height:52%;background:#0d0b0a;
+      clip-path:polygon(0 100%,100% 0,100% 100%)}
+  #doorway{position:absolute;left:40%;bottom:18%;width:27%;height:70%;box-sizing:border-box;
+      border:14px solid #4a3522;border-bottom:0;background:linear-gradient(#171513,#38342e)}
+  #monster{position:absolute;left:50%;bottom:0;height:92%;transform:translateX(-50%);
+      filter:drop-shadow(0 0 18px rgba(255,255,255,.08))}
+  #shade{position:absolute;inset:0;background:radial-gradient(circle at 55% 50%,transparent 30%,rgba(0,0,0,.85) 100%)}
+  @keyframes fl{0%,100%{opacity:1}92%{opacity:.88}95%{opacity:1}97%{opacity:.72}}
+  @media (prefers-reduced-motion:reduce){#bg{animation:none}}
+  #gtitle{position:absolute;top:22px;right:30px;color:#a00;font-size:30px;letter-spacing:6px;text-shadow:0 0 10px #000}
+  #mbox{position:absolute;left:9%;top:20%}
+  .mbtn{display:block;width:250px;background:#111114;color:#fff;border:0;border-radius:0;
+      font-family:inherit;font-size:40px;padding:8px 0;margin:0;cursor:pointer;text-align:center;letter-spacing:1px}
+  .mbtn:hover,.mbtn:focus-visible{background:#2a0a0a;outline:2px solid #a00}
+  #cont{width:250px;text-align:center;color:#fff;font-size:24px;margin:2px 0 44px;text-shadow:0 0 6px #000}
+  #langsw{position:relative;display:flex;width:180px;height:70px;margin:44px 0 0 34px;border:4px solid #8a8a8a;
+      border-radius:35px;overflow:hidden;cursor:pointer;box-sizing:border-box}
+  #langsw div.l{flex:1;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
+  #lv{background:#c8102e;color:#ffde00}#le{background:#1b2f6b;color:#fff}
+  #knob{position:absolute;top:3px;left:calc(100% - 59px);width:56px;height:56px;border-radius:50%;background:#fff;transition:left .2s}
+  #langsw.en #knob{left:3px}
+  #hint{position:absolute;bottom:14px;width:100%;text-align:center;color:#aaa;font-size:14px;text-shadow:0 0 6px #000}
+  @media (max-width:700px){#mbox{left:50%;transform:translateX(-50%)}#doorway{opacity:.4}}
+
+  #game-over{position:absolute;inset:0;background:rgba(90,0,0,.95);color:#ddd;display:none;flex-direction:column;
+      justify-content:center;align-items:center;z-index:30;text-align:center;padding:20px}
+  #game-over h1{color:#d22;letter-spacing:4px;font-size:40px}
+  #go-btn{padding:12px 28px;font-size:18px;cursor:pointer;background:#600;color:#fff;border:1px solid #c00;margin-top:18px;font-family:inherit}
+  #go-btn:hover{background:#800}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+<div id="crosshair"></div>
+<div id="vignette"></div>
+<div id="prompt"></div>
+<div id="ui">
+  <div id="inventory"></div>
+  <div id="status"></div>
+  <div class="bar"><i id="stam"></i></div>
+  <div class="bar"><i id="bat"></i></div>
+</div>
+
+<div id="menu">
+  <div id="bg">
+    <div id="floor"></div><div id="stairs"></div>
+    <div id="doorway">
+      <svg id="monster" viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9c7bf"/><stop offset="1" stop-color="#4b4944"/></linearGradient></defs>
+        <path d="M68 118 L132 118 L168 420 L32 420 Z" fill="url(#gw)"/>
+        <line x1="132" y1="135" x2="146" y2="285" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
+        <line x1="68" y1="135" x2="52" y2="262" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
+        <line x1="40" y1="280" x2="80" y2="185" stroke="#7a4e24" stroke-width="10" stroke-linecap="round"/>
+        <line x1="64" y1="222" x2="80" y2="185" stroke="#8a0000" stroke-width="11" stroke-linecap="round"/>
+        <ellipse cx="100" cy="86" rx="27" ry="33" fill="#cbc3b6"/>
+        <path d="M72 80 Q100 38 128 80 L128 66 Q100 28 72 66 Z" fill="#8f8a82"/>
+        <circle cx="90" cy="84" r="4.5" fill="#fff"/><circle cx="110" cy="84" r="4.5" fill="#fff"/>
+        <circle cx="90" cy="84" r="1.6" fill="#a00"/><circle cx="110" cy="84" r="1.6" fill="#a00"/>
+        <ellipse cx="100" cy="110" rx="6" ry="9" fill="#2a0808"/>
+      </svg>
+    </div>
+    <div id="shade"></div>
+  </div>
+  <div id="gtitle"></div>
+  <div id="mbox">
+    <button class="mbtn" id="play"></button>
+    <div id="cont"></div>
+    <button class="mbtn" id="neu"></button>
+    <div id="langsw" role="button" tabindex="0" aria-label="Language">
+      <div class="l" id="lv">★</div><div class="l" id="le">EN</div><div id="knob"></div>
+    </div>
+  </div>
+  <div id="hint"></div>
+</div>
+
+<div id="game-over">
+  <h1 id="go-title"></h1>
+  <p id="go-sub"></p>
+  <button id="go-btn"></button>
+</div>
+
+<script>
+// ---------- Tiện ích, ngôn ngữ, lưu tiến trình ----------
+const $ = id => document.getElementById(id);
+const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+let day = 1, lang = 'vi';
+try { day = +localStorage.getItem('gh_day') || 1; lang = localStorage.getItem('gh_lang') || 'vi'; } catch (e) {}
+let mult = Math.min(1.5, 1 + (day - 1) * .08); // quái nhanh dần theo ngày
+const TX = {
+  vi: { title:'NGÀY {d}???', play:'CHƠI', cont:'Tiếp tục · Ngày {d}', neu:'GAME MỚI',
+    hint:'W A S D di chuyển  |  Chuột nhìn  |  Shift chạy  |  F đèn pin  |  E nhặt / mở cửa',
+    inv0:'Túi đồ: Trống', invK:'Túi đồ: Chìa Khóa Cửa', m0:'Nhiệm vụ: Tìm chìa khóa thoát hiểm!',
+    m1:'Chạy ra Cửa Thoát Hiểm ở góc dưới mê cung!', locked:'Cửa đang khóa!',
+    pKey:'[E] Nhặt chìa khóa', pBat:'[E] Nhặt pin', pDoor:'[E] Mở cửa thoát hiểm', pLock:'Cửa đang khóa',
+    win:'BẠN ĐÃ THOÁT KHỎI QUÁI VẬT!', lose:'BẠN ĐÃ BỊ BÚA ĐẬP CHẾT!', time:'Thời gian: {s} giây',
+    next:'NGÀY TIẾP THEO', again:'CHƠI LẠI' },
+  en: { title:'DAY {d}???', play:'PLAY', cont:'Continue · Day {d}', neu:'NEW GAME',
+    hint:'W A S D move  |  Mouse look  |  Shift run  |  F flashlight  |  E pick up / open',
+    inv0:'Inventory: Empty', invK:'Inventory: Door Key', m0:'Mission: Find the escape key!',
+    m1:"Run to the Exit Door in the maze's bottom corner!", locked:'The door is locked!',
+    pKey:'[E] Pick up key', pBat:'[E] Pick up battery', pDoor:'[E] Open exit door', pLock:'The door is locked',
+    win:'YOU ESCAPED THE MONSTER!', lose:'YOU WERE SMASHED BY THE HAMMER!', time:'Time: {s} s',
+    next:'NEXT DAY', again:'TRY AGAIN' }
+};
+const tr = k => TX[lang][k];
+
+// ---------- Cảnh & render ----------
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030000);
+scene.fog = new THREE.FogExp2(0x030000, 0.13);
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+const controls = new THREE.PointerLockControls(camera, document.body);
+scene.add(camera);
+scene.add(new THREE.AmbientLight(0x2a1515, 0.5));
+
+// Đèn pin
+const light = new THREE.SpotLight(0xfff2d0, 2.4, 20, Math.PI / 6, 0.45, 1.2);
+camera.add(light, light.target);
+light.target.position.set(0, 0, -1);
+
+// ---------- Mê cung ngẫu nhiên ----------
+const N = 19, CS = 3.2, WH = 3.2, RAD = 0.35;
+const rnd = a => Math.floor(Math.random() * a);
+const grid = Array.from({ length: N }, () => Array(N).fill(1));
+const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+(function carve(x, y) {
+  grid[y][x] = 0;
+  dirs.slice().sort(() => Math.random() - .5).forEach(([dx, dy]) => {
+    const nx = x + dx * 2, ny = y + dy * 2;
+    if (nx > 0 && ny > 0 && nx < N - 1 && ny < N - 1 && grid[ny][nx]) { grid[y + dy][x + dx] = 0; carve(nx, ny); }
+  });
+})(1, 1);
+for (let i = 0; i < 35; i++) { // mở thêm lối tắt để có đường vòng
+  const x = 1 + rnd(N - 2), y = 1 + rnd(N - 2);
+  if (grid[y][x] && ((!grid[y][x-1] && !grid[y][x+1]) || (!grid[y-1][x] && !grid[y+1][x]))) grid[y][x] = 0;
+}
+const DOOR = [N - 2, N - 1];
+const solid = (cx, cy) => cx < 0 || cy < 0 || cx >= N || cy >= N || grid[cy][cx] === 1;
+const cellOf = v => Math.round(v / CS);
+const hit = (x, z) => [[-1,-1],[1,-1],[-1,1],[1,1]].some(([a, b]) => solid(cellOf(x + a * RAD), cellOf(z + b * RAD)));
+function move(o, dx, dz) { if (!hit(o.x + dx, o.z)) o.x += dx; if (!hit(o.x, o.z + dz)) o.z += dz; }
+
+function tex(base, n, rep) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'); g.fillStyle = base; g.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = `rgba(0,0,0,${Math.random() * .35})`;
+    g.fillRect(Math.random() * 128, Math.random() * 128, Math.random() * 22 + 2, Math.random() * 22 + 2);
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); return t;
+}
+let walls = 0;
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grid[y][x] && !(x === DOOR[0] && y === DOOR[1])) walls++;
+const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(CS, WH, CS),
+  new THREE.MeshStandardMaterial({ map: tex('#4a3b36', 160, 1), roughness: .95 }), walls);
+let wi = 0; const mtx = new THREE.Matrix4();
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++)
+  if (grid[y][x] && !(x === DOOR[0] && y === DOOR[1])) { mtx.setPosition(x * CS, WH / 2, y * CS); wallMesh.setMatrixAt(wi++, mtx); }
+scene.add(wallMesh);
+
+const mid = (N - 1) / 2 * CS;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(N * CS, N * CS),
+  new THREE.MeshStandardMaterial({ map: tex('#2a1f1c', 200, N * CS / 4), roughness: 1 }));
+floor.rotation.x = -Math.PI / 2; floor.position.set(mid, 0, mid); scene.add(floor);
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(N * CS, N * CS), new THREE.MeshStandardMaterial({ color: 0x120a0a }));
+ceil.rotation.x = Math.PI / 2; ceil.position.set(mid, WH, mid); scene.add(ceil);
+
+// Cửa thoát hiểm
+const door = new THREE.Mesh(new THREE.BoxGeometry(CS * .9, WH * .95, .25), new THREE.MeshStandardMaterial({ color: 0x5a2d0c }));
+door.position.set(DOOR[0] * CS, WH * .475, DOOR[1] * CS); scene.add(door);
+
+//<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ngày 1??? - Horror 3D</title>
+<style>
+  body{margin:0;overflow:hidden;background:#000;font-family:'Segoe UI',Roboto,Arial,sans-serif;user-select:none}
+  #crosshair{position:absolute;top:50%;left:50%;width:5px;height:5px;background:#c00;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:10}
+  #ui{position:absolute;top:15px;left:15px;color:#ddd;pointer-events:none;z-index:10;text-shadow:1px 1px 2px #000;font-size:15px}
+  .bar{width:170px;height:8px;background:#2a2020;margin-top:6px;border:1px solid #442}
+  .bar i{display:block;height:100%;width:100%}
+  #stam{background:#c9a227}#bat{background:#e8e0b0}
+  #prompt{position:absolute;bottom:14%;width:100%;text-align:center;color:#fff;font-size:20px;text-shadow:0 0 6px #000;z-index:10;pointer-events:none}
+  #vignette{position:absolute;inset:0;pointer-events:none;z-index:9;opacity:0;background:radial-gradient(circle,transparent 35%,rgba(150,0,0,.9) 100%)}
+
+  /* ----- Màn hình chờ ----- */
+  #menu{position:absolute;inset:0;z-index:20;overflow:hidden;background:#0a0908}
+  #bg{position:absolute;inset:0;animation:fl 7s infinite;
+      background:radial-gradient(ellipse at 55% 40%,#4a463f 0%,#23201c 55%,#0b0a09 100%)}
+  #floor{position:absolute;left:0;right:0;bottom:0;height:20%;
+      background:repeating-linear-gradient(90deg,#1b1713 0 38px,#120f0c 38px 42px)}
+  #stairs{position:absolute;right:0;bottom:0;width:26%;height:52%;background:#0d0b0a;
+      clip-path:polygon(0 100%,100% 0,100% 100%)}
+  #doorway{position:absolute;left:40%;bottom:18%;width:27%;height:70%;box-sizing:border-box;
+      border:14px solid #4a3522;border-bottom:0;background:linear-gradient(#171513,#38342e)}
+  #monster{position:absolute;left:50%;bottom:0;height:92%;transform:translateX(-50%);
+      filter:drop-shadow(0 0 18px rgba(255,255,255,.08))}
+  #shade{position:absolute;inset:0;background:radial-gradient(circle at 55% 50%,transparent 30%,rgba(0,0,0,.85) 100%)}
+  @keyframes fl{0%,100%{opacity:1}92%{opacity:.88}95%{opacity:1}97%{opacity:.72}}
+  @media (prefers-reduced-motion:reduce){#bg{animation:none}}
+  #gtitle{position:absolute;top:22px;right:30px;color:#a00;font-size:30px;letter-spacing:6px;text-shadow:0 0 10px #000}
+  #mbox{position:absolute;left:9%;top:14%}
+  .mbtn{display:block;width:250px;background:#111114;color:#fff;border:0;border-radius:0;
+      font-family:inherit;font-size:40px;padding:8px 0;margin:0;cursor:pointer;text-align:center;letter-spacing:1px}
+  .mbtn:hover,.mbtn:focus-visible{background:#2a0a0a;outline:2px solid #a00}
+  #cont{width:250px;text-align:center;color:#fff;font-size:24px;margin:2px 0 28px;text-shadow:0 0 6px #000}
+  #set{margin-top:16px}
+  #langsw{position:relative;display:flex;width:180px;height:70px;margin:28px 0 0 34px;border:4px solid #8a8a8a;
+      border-radius:35px;overflow:hidden;cursor:pointer;box-sizing:border-box}
+  #langsw div.l{flex:1;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
+  #lv{background:#c8102e;color:#ffde00}#le{background:#1b2f6b;color:#fff}
+  #knob{position:absolute;top:3px;left:calc(100% - 59px);width:56px;height:56px;border-radius:50%;background:#fff;transition:left .2s}
+  #langsw.en #knob{left:3px}
+  #hint{position:absolute;bottom:14px;width:100%;text-align:center;color:#aaa;font-size:14px;text-shadow:0 0 6px #000}
+  @media (max-width:700px){#mbox{left:50%;transform:translateX(-50%)}#doorway{opacity:.4}}
+
+  /* ----- Bảng cài đặt ----- */
+  #setp{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.78);align-items:center;justify-content:center}
+  #setp.on{display:flex}
+  #setbox{width:min(420px,88vw);background:#111114;border:1px solid #522;padding:22px 26px;color:#ddd}
+  #setbox h2{margin:0 0 10px;color:#b00;letter-spacing:3px;font-size:26px}
+  #setbox label{display:block;margin:14px 0;font-size:16px}
+  #setbox label>span{display:flex;justify-content:space-between;margin-bottom:6px}
+  #setbox input[type=range]{width:100%;accent-color:#a00}
+  #setbox .chk{display:flex;align-items:center;gap:10px}
+  #setbox .chk>span{display:inline;margin:0}
+  .sbtn{padding:10px 22px;font-size:18px;cursor:pointer;background:#600;color:#fff;border:1px solid #c00;font-family:inherit;margin:8px 8px 0 0}
+  .sbtn:hover{background:#800}
+
+  #game-over{position:absolute;inset:0;background:rgba(90,0,0,.95);color:#ddd;display:none;flex-direction:column;
+      justify-content:center;align-items:center;z-index:30;text-align:center;padding:20px}
+  #game-over h1{color:#d22;letter-spacing:4px;font-size:40px}
+  #go-btn{padding:12px 28px;font-size:18px;cursor:pointer;background:#600;color:#fff;border:1px solid #c00;margin-top:18px;font-family:inherit}
+  #go-btn:hover{background:#800}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+<div id="crosshair"></div>
+<div id="vignette"></div>
+<div id="prompt"></div>
+<div id="ui">
+  <div id="inventory"></div>
+  <div id="status"></div>
+  <div class="bar"><i id="stam"></i></div>
+  <div class="bar"><i id="bat"></i></div>
+</div>
+
+<div id="menu">
+  <div id="bg">
+    <div id="floor"></div><div id="stairs"></div>
+    <div id="doorway">
+      <svg id="monster" viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9c7bf"/><stop offset="1" stop-color="#4b4944"/></linearGradient></defs>
+        <path d="M68 118 L132 118 L168 420 L32 420 Z" fill="url(#gw)"/>
+        <line x1="132" y1="135" x2="146" y2="285" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
+        <line x1="68" y1="135" x2="52" y2="262" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
+        <line x1="40" y1="280" x2="80" y2="185" stroke="#7a4e24" stroke-width="10" stroke-linecap="round"/>
+        <line x1="64" y1="222" x2="80" y2="185" stroke="#8a0000" stroke-width="11" stroke-linecap="round"/>
+        <ellipse cx="100" cy="86" rx="27" ry="33" fill="#cbc3b6"/>
+        <path d="M72 80 Q100 38 128 80 L128 66 Q100 28 72 66 Z" fill="#8f8a82"/>
+        <circle cx="90" cy="84" r="4.5" fill="#fff"/><circle cx="110" cy="84" r="4.5" fill="#fff"/>
+        <circle cx="90" cy="84" r="1.6" fill="#a00"/><circle cx="110" cy="84" r="1.6" fill="#a00"/>
+        <ellipse cx="100" cy="110" rx="6" ry="9" fill="#2a0808"/>
+      </svg>
+    </div>
+    <div id="shade"></div>
+  </div>
+  <div id="gtitle"></div>
+  <div id="mbox">
+    <button class="mbtn" id="play"></button>
+    <div id="cont"></div>
+    <button class="mbtn" id="neu"></button>
+    <button class="mbtn" id="set"></button>
+    <div id="langsw" role="button" tabindex="0" aria-label="Language">
+      <div class="l" id="lv">★</div><div class="l" id="le">EN</div><div id="knob"></div>
+    </div>
+  </div>
+  <div id="hint"></div>
+
+  <div id="setp">
+    <div id="setbox">
+      <h2 id="settitle"></h2>
+      <div id="setrows"></div>
+      <button class="sbtn" id="setreset"></button><button class="sbtn" id="setback"></button>
+    </div>
+  </div>
+</div>
+
+<div id="game-over">
+  <h1 id="go-title"></h1>
+  <p id="go-sub"></p>
+  <button id="go-btn"></button>
+</div>
+
+<script>
+// ---------- Tiện ích, ngôn ngữ, cài đặt, lưu tiến trình ----------
+const $ = id => document.getElementById(id);
+const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+let day = 1, lang = 'vi';
+try { day = +localStorage.getItem('gh_day') || 1; lang = localStorage.getItem('gh_lang') || 'vi'; } catch (e) {}
+let mult = Math.min(1.5, 1 + (day - 1) * .08); // quái nhanh dần theo ngày
+const DEF = { vol: 70, sens: 100, bri: 100, fov: 75, shake: true };
+let S = { ...DEF };
+try { Object.assign(S, JSON.parse(localStorage.getItem('gh_set') || '{}')); } catch (e) {}
+const TX = {
+  vi: { title:'NGÀY {d}???', play:'CHƠI', cont:'Tiếp tục · Ngày {d}', neu:'GAME MỚI', set:'CÀI ĐẶT',
+    vol:'Âm lượng', sens:'Độ nhạy chuột', bri:'Độ sáng môi trường', fov:'Tầm nhìn (FOV)',
+    shake:'Rung màn hình khi quái ở gần', back:'XONG', reset:'Mặc định',
+    hint:'W A S D di chuyển  |  Chuột nhìn  |  Shift chạy  |  F đèn pin  |  E nhặt / mở cửa',
+    inv0:'Túi đồ: Trống', invK:'Túi đồ: Chìa Khóa Cửa', m0:'Nhiệm vụ: Tìm chìa khóa thoát hiểm!',
+    m1:'Chạy ra Cửa Thoát Hiểm ở góc dưới mê cung!', locked:'Cửa đang khóa!',
+    pKey:'[E] Nhặt chìa khóa', pBat:'[E] Nhặt pin', pDoor:'[E] Mở cửa thoát hiểm', pLock:'Cửa đang khóa',
+    win:'BẠN ĐÃ THOÁT KHỎI QUÁI VẬT!', lose:'BẠN ĐÃ BỊ BÚA ĐẬP CHẾT!', time:'Thời gian: {s} giây',
+    next:'NGÀY TIẾP THEO', again:'CHƠI LẠI' },
+  en: { title:'DAY {d}???', play:'PLAY', cont:'Continue · Day {d}', neu:'NEW GAME', set:'SETTINGS',
+    vol:'Volume', sens:'Mouse sensitivity', bri:'Ambient brightness', fov:'Field of view',
+    shake:'Screen shake near monster', back:'DONE', reset:'Reset',
+    hint:'W A S D move  |  Mouse look  |  Shift run  |  F flashlight  |  E pick up / open',
+    inv0:'Inventory: Empty', invK:'Inventory: Door Key', m0:'Mission: Find the escape key!',
+    m1:"Run to the Exit Door in the maze's bottom corner!", locked:'The door is locked!',
+    pKey:'[E] Pick up key', pBat:'[E] Pick up battery', pDoor:'[E] Open exit door', pLock:'The door is locked',
+    win:'YOU ESCAPED THE MONSTER!', lose:'YOU WERE SMASHED BY THE HAMMER!', time:'Time: {s} s',
+    next:'NEXT DAY', again:'TRY AGAIN' }
+};
+const tr = k => TX[lang][k];
+
+// ---------- Cảnh & render ----------
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030000);
+scene.fog = new THREE.FogExp2(0x030000, 0.13);
+const camera = new THREE.PerspectiveCamera(S.fov, innerWidth / innerHeight, 0.1, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+const controls = new THREE.PointerLockControls(camera, document.body);
+scene.add(camera);
+const ambient = new THREE.AmbientLight(0x2a1515, 0.5);
+scene.add(ambient);
+
+// Độ nhạy chuột tự xử lý (để chỉnh được trong cài đặt)
+const eul = new THREE.Euler(0, 0, 0, 'YXZ');
+document.addEventListener('mousemove', e => {
+  if (!controls.isLocked) return;
+  e.stopImmediatePropagation();
+  const s = .002 * S.sens / 100;
+  eul.setFromQuaternion(camera.quaternion);
+  eul.y -= e.movementX * s; eul.x -= e.movementY * s;
+  eul.x = Math.max(-1.5, Math.min(1.5, eul.x));
+  camera.quaternion.setFromEuler(eul);
+}, true);
+
+// Đèn pin
+const light = new THREE.SpotLight(0xfff2d0, 2.4, 20, Math.PI / 6, 0.45, 1.2);
+camera.add(light, light.target);
+light.target.position.set(0, 0, -1);
+
+// ---------- Mê cung ngẫu nhiên ----------
+const N = 19, CS = 3.2, WH = 3.2, RAD = 0.35;
+const rnd = a => Math.floor(Math.random() * a);
+const grid = Array.from({ length: N }, () => Array(N).fill(1));
+const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+(function carve(x, y) {
+  grid[y][x] = 0;
+  dirs.slice().sort(() => Math.random() - .5).forEach(([dx, dy]) => {
+    const nx = x + dx * 2, ny = y + dy * 2;
+    if (nx > 0 && ny > 0 && nx < N - 1 && ny < N - 1 && grid[ny][nx]) { grid[y + dy][x + dx] = 0; carve(nx, ny); }
+  });
+})(1, 1);
+for (let i = 0; i < 35; i++) { // mở thêm lối tắt để có đường vòng
+  const x = 1 + rnd(N - 2), y = 1 + rnd(N - 2);
+  if (grid[y][x] && ((!grid[y][x-1] && !grid[y][x+1]) || (!grid[y-1][x] && !grid[y+1][x]))) grid[y][x] = 0;
+}
+const DOOR = [N - 2, N - 1];
+const solid = (cx, cy) => cx < 0 || cy < 0 || cx >= N || cy >= N || grid[cy][cx] === 1;
+const cellOf = v => Math.round(v / CS);
+const hit = (x, z) => [[-1,-1],[1,-1],[-1,1],[1,1]].some(([a, b]) => solid(cellOf(x + a * RAD), cellOf(z + b * RAD)));
+function move(o, dx, dz) { if (!hit(o.x + dx, o.z)) o.x += dx; if (!hit(o.x, o.z + dz)) o.z += dz; }
+
+function tex(base, n, rep) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'); g.fillStyle = base; g.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = `rgba(0,0,0,${Math.random() * .35})`;
+    g.fillRect(Math.random() * 128, Math.random() * 128, Math.random() * 22 + 2, Math.random() * 22 + 2);
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); return t;
+}
+let walls = 0;
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grid[y][x] && !(x === DOOR[0] && y === DOOR[1])) walls++;
+const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(CS, WH, CS),
+  new THREE.MeshStandardMaterial({ map: tex('#4a3b36', 160, 1), roughness: .95 }), walls);
+let wi = 0; const mtx = new THREE.Matrix4();
+for (let y = 0; y < N; y++) for (let x = 0; x < N; x++)
+  if (grid[y][x] && !(x === DOOR[0] && y === DOOR[1])) { mtx.setPosition(x * CS, WH / 2, y * CS); wallMesh.setMatrixAt(wi++, mtx); }
+scene.add(wallMesh);
+
+const mid = (N - 1) / 2 * CS;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(N * CS, N * CS),
+  new THREE.MeshStandardMaterial({ map: tex('#2a1f1c', 200, N * CS / 4), roughness: 1 }));
+floor.rotation.x = -Math.PI / 2; floor.position.set(mid, 0, mid); scene.add(floor);
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(N * CS, N * CS), new THREE.MeshStandardMaterial({ color: 0x120a0a }));
+ceil.rotation.x = Math.PI / 2; ceil.position.set(mid, WH, mid); scene.add(ceil);
+
+// Cửa thoát hiểm
+const door = new THREE.Mesh(new THREE.BoxGeometry(CS * .9, WH * .95, .25), new THREE.MeshStandardMaterial({ color: 0x5a2d0c }));
+door.position.set(DOOR[0] * CS, WH * .475, DOOR[1] * CS); scene.add(door);
+
+// ---------- Vật phẩm ----------
+const spots = [];
+for (let y = 1; y < N; y += 2) for (let x = 1; x < N; x += 2) spots.push([x, y]);
+function pick(minD, from) {
+  let s; do { s = spots[rnd(spots.length)]; } while (Math.abs(s[0] - from[0]) + Math.abs(s[1] - from[1]) < minD);
+  return s;
+}
+const key = new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 8, 16), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x886600 }));
+const ks = pick(14, [1, 1]); key.position.set(ks[0] * CS, .9, ks[1] * CS);
+key.add(new THREE.PointLight(0xffd700, 1, 6)); scene.add(key);
+const batteries = [];
+for (let i = 0; i < 4; i++) {
+  const b = new THREE.Mesh(new THREE.BoxGeometry(.18, .32, .18), new THREE.MeshBasicMaterial({ color: 0x33ff66 }));
+  const s = pick(4, [1, 1]); b.position.set(s[0] * CS, .6, s[1] * CS); scene.add(b); batteries.push(b);
+}
+
+// ---------- Quái vật cầm búa ----------
+const mat = (c, e = 0) => new THREE.MeshStandardMaterial({ color: c, emissive: e, roughness: .8 });
+const monster = new THREE.Group();
+const body = new THREE.Mesh(new THREE.CylinderGeometry(.5, .4, 2.2), mat(0x111111)); body.position.y = 1.1; monster.add(body);
+const head = new THREE.Mesh(new THREE.SphereGeometry(.4, 16, 16), mat(0x660000)); head.position.y = 2.4; monster.add(head);
+const eye = new THREE.Mesh(new THREE.BoxGeometry(.5, .1, .2), new THREE.MeshBasicMaterial({ color: 0xff0000 })); eye.position.set(0, 2.45, .3); monster.add(eye);
+const hammer = new THREE.Group();
+const handle = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 1.6), mat(0x4a2e00)); handle.position.y = .8; hammer.add(handle);
+const hh = new THREE.Mesh(new THREE.BoxGeometry(.5, .3, .8), mat(0x555555)); hh.position.y = 1.4; hammer.add(hh);
+hammer.position.set(.6, .8, .2); hammer.rotation.x = Math.PI / 4; monster.add(hammer);
+const monsterLight = new THREE.PointLight(0xff2200, .8, 7);
+monsterLight.position.set(0, 2.3, .5);
+monster.add(monsterLight);
+const ms = pick(14, [1, 1]); monster.position.set(ms[0] * CS, 0, ms[1] * CS); scene.add(monster);
+
+// ---------- Âm thanh ----------
+let ac, master;
+function initAudio() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain(); master.gain.value = S.vol / 100; master.connect(ac.destination);
+  const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+  o.type = 'sawtooth'; o.frequency.value = 48; f.type = 'lowpass'; f.frequency.value = 140; g.gain.value = .05;
+  o.connect(f); f.connect(g); g.connect(master); o.start();
+}
+function thump(freq, vol, dur) {
+  if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+  o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * .5, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  o.connect(g); g.connect(master); o.start(); o.stop(t + dur);
+}
+
+// ---------- Cài đặt ----------
+const ROWS = [['vol', 0, 100, '%'], ['sens', 20, 300, '%'], ['bri', 25, 400, '%'], ['fov', 60, 100, '°']];
+$('setrows').innerHTML = ROWS.map(([id, mn, mx]) =>
+  `<label><span><span id="l_${id}"></span><b id="v_${id}"></b></span><input type="range" id="i_${id}" min="${mn}" max="${mx}"></label>`
+).join('') + '<label class="chk"><input type="checkbox" id="i_shake"><span id="l_shake"></span></label>';
+ROWS.forEach(([id]) => $('i_' + id).oninput = e => { S[id] = +e.target.value; applyAll(); });
+$('i_shake').onchange = e => { S.shake = e.target.checked; applyAll(); };
+function applyAll() {
+  ROWS.forEach(([id, , , u]) => {
+    $('i_' + id).value = S[id]; $('v_' + id).innerText = S[id] + u; $('l_' + id).innerText = tr(id);
+  });
+  $('i_shake').checked = S.shake; $('l_shake').innerText = tr('shake');
+  $('settitle').innerText = tr('set'); $('setback').innerText = tr('back'); $('setreset').innerText = tr('reset');
+  camera.fov = S.fov; camera.updateProjectionMatrix();
+  ambient.intensity = .5 * S.bri / 100;
+  if (master) master.gain.value = S.vol / 100;
+  save('gh_set', JSON.stringify(S));
+}
+$('set').onclick = () => $('setp').classList.add('on');
+$('setback').onclick = () => $('setp').classList.remove('on');
+$('setreset').onclick = () => { S = { ...DEF }; applyAll(); };
+
+// ---------- Menu & điều khiển ----------
+const keys = {}; let hasKey = false, gameOver = false, flashOn = true, started = false;
+function applyLang() {
+  document.documentElement.lang = lang;
+  $('gtitle').innerText = tr('title').replace('{d}', day);
+  $('play').innerText = tr('play');
+  $('cont').innerText = tr('cont').replace('{d}', day);
+  $('neu').innerText = tr('neu');
+  $('set').innerText = tr('set');
+  $('hint').innerText = tr('hint');
+  $('inventory').innerText = tr(hasKey ? 'invK' : 'inv0');
+  $('status').innerText = tr(hasKey ? 'm1' : 'm0');
+  $('langsw').className = lang;
+  applyAll();
+}
+applyLang();
+const startGame = () => { if (!ac) initAudio(); $('setp').classList.remove('on'); controls.lock(); };
+$('play').onclick = startGame;
+$('neu').onclick = () => {
+  day = 1; save('gh_day', 1); mult = 1; applyLang();
+  if (started) location.reload(); else startGame();
+};
+const toggleLang = () => { lang = lang === 'vi' ? 'en' : 'vi'; save('gh_lang', lang); applyLang(); };
+$('langsw').onclick = toggleLang;
+$('langsw').onkeydown = e => { if (e.code === 'Enter' || e.code === 'Space') toggleLang(); };
+$('go-btn').onclick = () => location.reload();
+controls.addEventListener('lock', () => { started = true; $('menu').style.display = 'none'; });
+controls.addEventListener('unlock', () => { if (!gameOver) $('menu').style.display = 'block'; });
+addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'KeyE') interact();
+  if (e.code === 'KeyF') flashOn = !flashOn;
+});
+addEventListener('keyup', e => keys[e.code] = false);
+
+const p = camera.position; p.set(CS, 1.6, CS);
+const doorDist = () => Math.hypot(p.x - door.position.x, p.z - door.position.z);
+const near = (o, r) => Math.hypot(p.x - o.position.x, p.z - o.position.z) < r;
+let battery = 1, stamina = 1, tired = false;
+
+function interact() {
+  if (gameOver || !controls.isLocked) return;
+  if (!hasKey && near(key, 2.4)) {
+    hasKey = true; scene.remove(key); thump(600, .2, .25);
+    $('inventory').innerText = tr('invK'); $('status').innerText = tr('m1');
+  }
+  for (let i = batteries.length - 1; i >= 0; i--) if (near(batteries[i], 2)) {
+    scene.remove(batteries[i]); batteries.splice(i, 1); battery = Math.min(1, battery + .4); thump(400, .15, .15);
+  }
+  if (doorDist() < 3.4) {
+    if (hasKey) endGame(true); else $('status').innerText = tr('locked');
+  }
+}
+function endGame(win) {
+  gameOver = true; controls.unlock();
+  if (win) { day++; save('gh_day', day); }
+  $('game-over').style.display = 'flex';
+  $('go-title').innerText = tr(win ? 'win' : 'lose');
+  $('go-sub').innerText = tr('time').replace('{s}', Math.round(t));
+  $('go-btn').innerText = tr(win ? 'next' : 'again');
+  if (!win) thump(45, 1, .6);
+}
+
+// ---------- AI quái vật ----------
+const k = c => c[0] + ',' + c[1];
+function nextStep(from, to) {
+  if (from[0] === to[0] && from[1] === to[1]) return from;
+  const prev = new Map([[k(from), null]]), q = [from];
+  while (q.length) {
+    const c = q.shift();
+    if (c[0] === to[0] && c[1] === to[1]) break;
+    for (const [dx, dy] of dirs) {
+      const n = [c[0] + dx, c[1] + dy];
+      if (solid(n[0], n[1]) || prev.has(k(n))) continue;
+      prev.set(k(n), c); q.push(n);
+    }
+  }
+  if (!prev.has(k(to))) return from;
+  let c = to, pr = prev.get(k(c));
+  while (pr && !(pr[0] === from[0] && pr[1] === from[1])) { c = pr; pr = prev.get(k(c)); }
+  return c;
+}
+function canSee(a, b) {
+  const d = Math.hypot(b.x - a.x, b.z - a.z), n = Math.ceil(d / .5);
+  for (let i = 1; i < n; i++) {
+    const f = i / n;
+    if (solid(cellOf(a.x + (b.x - a.x) * f), cellOf(a.z + (b.z - a.z) * f))) return false;
+  }
+  return true;
+}
+let chaseTimer = 0, lastSeen = [1, 1], target = spots[rnd(spots.length)];
+
+// ---------- Vòng lặp ----------
+const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), mv = new THREE.Vector3();
+let t = 0, stepT = 0, beatT = 0;
+function update(dt) {
+  t += dt;
+  // Di chuyển người chơi
+  camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize(); right.set(-fwd.z, 0, fwd.x);
+  mv.set(0, 0, 0)
+    .addScaledVector(fwd, (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0))
+    .addScaledVector(right, (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0));
+  const moving = mv.lengthSq() > 0;
+  const sprint = moving && (keys.ShiftLeft || keys.ShiftRight) && !tired;
+  if (sprint) { stamina = Math.max(0, stamina - dt / 4.5); if (!stamina) tired = true; }
+  else stamina = Math.min(1, stamina + dt / (moving ? 6 : 3));
+  if (stamina > .3) tired = false;
+  if (moving) {
+    mv.normalize().multiplyScalar((sprint ? 5.4 : 3.2) * dt); move(p, mv.x, mv.z);
+    stepT -= dt; if (stepT <= 0) { thump(110, .1, .08); stepT = sprint ? .28 : .5; }
+  }
+  p.y = 1.6 + (moving ? Math.sin(t * (sprint ? 14 : 9)) * .05 : 0);
+
+  // Đèn pin
+  if (flashOn && battery > 0) battery = Math.max(0, battery - dt / 100);
+  const flick = battery < .2 && Math.random() < .08 ? .2 : 1;
+  light.intensity = flashOn && battery > 0 ? 2.4 * flick : 0;
+
+  // Quái vật
+  const dist = Math.hypot(p.x - monster.position.x, p.z - monster.position.z);
+  const sees = canSee(monster.position, p) && (dist < 7 || (flashOn && battery > 0 && dist < 14));
+  const hears = sprint ? dist < 16 : moving ? dist < 5 : dist < 2;
+  const pc = [cellOf(p.x), cellOf(p.z)], mc = [cellOf(monster.position.x), cellOf(monster.position.z)];
+  if (sees || hears) { chaseTimer = 4; lastSeen = pc; }
+  chaseTimer = Math.max(0, chaseTimer - dt);
+  const chasing = chaseTimer > 0;
+  if (chasing) target = lastSeen;
+  else if (mc[0] === target[0] && mc[1] === target[1]) target = spots[rnd(spots.length)];
+  let gx, gz;
+  if (sees && mc[0] === pc[0] && mc[1] === pc[1]) { gx = p.x; gz = p.z; }
+  else { const s = nextStep(mc, target); gx = s[0] * CS; gz = s[1] * CS; }
+  const dx = gx - monster.position.x, dz = gz - monster.position.z, dl = Math.hypot(dx, dz);
+  if (dl > .05) {
+    const sp = Math.min(dl, (chasing ? 3.7 : 1.7) * mult * dt);
+    monster.position.x += dx / dl * sp; monster.position.z += dz / dl * sp;
+    monster.rotation.y = Math.atan2(dx, dz);
+  }
+  hammer.rotation.x = Math.PI / 4 + (chasing ? Math.sin(t * 8) * .6 : Math.sin(t * 2) * .1);
+  if (dist < 1.2) endGame(false);
+
+  // Căng thẳng: viền đỏ, rung, tim đập
+  const danger = Math.max(0, Math.min(1, 1 - dist / 12));
+  $('vignette').style.opacity = danger * .9;
+  if (S.shake) p.y += (Math.random() - .5) * .06 * danger;
+  beatT -= dt;
+  if (beatT <= 0 && danger > .05) {
+    thump(70, .2 + danger * .5, .15); setTimeout(() => thump(60, .15 + danger * .35, .15), 130);
+    beatT = 1.1 - danger * .75;
+  }
+
+  // Vật phẩm xoay & gợi ý
+  key.rotation.y += dt * 2; batteries.forEach(b => b.rotation.y += dt * 2);
+  let msg = '';
+  if (!hasKey && near(key, 2.4)) msg = tr('pKey');
+  else if (batteries.some(b => near(b, 2))) msg = tr('pBat');
+  if (doorDist() < 3.4) msg = tr(hasKey ? 'pDoor' : 'pLock');
   $('prompt').innerText = msg;
   $('stam').style.width = stamina * 100 + '%';
   $('bat').style.width = battery * 100 + '%';
