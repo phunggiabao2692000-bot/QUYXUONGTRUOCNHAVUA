@@ -75,14 +75,14 @@ const TX = {
   vi: { title:'NGÀY {d}???', start:'BẮT ĐẦU', resume:'TIẾP TỤC', menu:'VỀ MENU',
     hint:'W A S D di chuyển  |  Chuột nhìn  |  Shift chạy  |  F đèn pin  |  E nhặt / mở cửa',
     inv0:'Túi đồ: Trống', invK:'Túi đồ: Chìa Khóa Cửa', m0:'Nhiệm vụ: Tìm chìa khóa thoát hiểm!',
-    m1:'Chạy ra Cửa Thoát Hiểm ở góc dưới mê cung!', locked:'Cửa đang khóa!',
+    m1:'Chạy ra Cửa Thoát Hiểm!', locked:'Cửa đang khóa!',
     pKey:'[E] Nhặt chìa khóa', pBat:'[E] Nhặt pin', pDoor:'[E] Mở cửa thoát hiểm', pLock:'Cửa đang khóa',
     win:'BẠN ĐÃ THOÁT KHỎI QUÁI VẬT!', lose:'BẠN ĐÃ BỊ BÚA ĐẬP CHẾT!', time:'Thời gian: {s} giây',
     next:'NGÀY TIẾP THEO', again:'CHƠI LẠI', no3d:'Không tải được thư viện 3D (Three.js). Hãy kiểm tra mạng rồi tải lại trang.' },
   en: { title:'DAY {d}???', start:'START', resume:'RESUME', menu:'BACK TO MENU',
     hint:'W A S D move  |  Mouse look  |  Shift run  |  F flashlight  |  E pick up / open',
     inv0:'Inventory: Empty', invK:'Inventory: Door Key', m0:'Mission: Find the escape key!',
-    m1:"Run to the Exit Door in the maze's bottom corner!", locked:'The door is locked!',
+    m1:'Run to the Exit Door!', locked:'The door is locked!',
     pKey:'[E] Pick up key', pBat:'[E] Pick up battery', pDoor:'[E] Open exit door', pLock:'The door is locked',
     win:'YOU ESCAPED THE MONSTER!', lose:'YOU WERE SMASHED BY THE HAMMER!', time:'Time: {s} s',
     next:'NEXT DAY', again:'TRY AGAIN', no3d:'Could not load the 3D library (Three.js). Check your connection and reload.' }
@@ -106,7 +106,7 @@ if (typeof THREE === 'undefined' || !THREE.PointerLockControls) throw new Error(
 // ---------- Cảnh & render ----------
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x030000);
-scene.fog = new THREE.FogExp2(0x030000, 0.13);
+scene.fog = new THREE.FogExp2(0x030000, 0.1);
 const camera = new THREE.PerspectiveCamera(S.fov, innerWidth / innerHeight, 0.1, 100);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -136,27 +136,23 @@ const light = new THREE.SpotLight(0xfff2d0, 2.4, 20, Math.PI / 6, 0.45, 1.2);
 camera.add(light, light.target);
 light.target.position.set(0, 0, -1);
 
-// ---------- Mê cung ngẫu nhiên ----------
-const N = 19, CS = 3.2, WH = 3.2, RAD = 0.35;
+// =====================================================
+//  BẢN ĐỒ (đã xóa mê cung) - CHỈNH Ở ĐÂY
+//  Đơn vị là "mét" trong game. Sàn là hình vuông từ (0,0) đến (SIZE,SIZE).
+//  Mỗi vị trí viết dạng [x, z].
+// =====================================================
+const SIZE = 40;                                  // độ rộng của sàn
+const PLAYER_POS  = [4, 4];                       // chỗ người chơi xuất hiện
+const MONSTER_POS = [32, 8];                      // chỗ quái vật xuất hiện
+const KEY_POS     = [12, 28];                     // chìa khóa
+const DOOR_POS    = [20, 40];                     // cửa thoát hiểm (nên đặt ở rìa sàn)
+const BAT_POS     = [[8, 12], [30, 20], [15, 35], [34, 34]]; // các viên pin (thêm/bớt tùy ý)
+const WH = 3.2, RAD = 0.35;
+
 const rnd = a => Math.floor(Math.random() * a);
-const grid = Array.from({ length: N }, () => Array(N).fill(1));
-const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-(function carve(x, y) {
-  grid[y][x] = 0;
-  dirs.slice().sort(() => Math.random() - .5).forEach(([dx, dy]) => {
-    const nx = x + dx * 2, ny = y + dy * 2;
-    if (nx > 0 && ny > 0 && nx < N - 1 && ny < N - 1 && grid[ny][nx]) { grid[y + dy][x + dx] = 0; carve(nx, ny); }
-  });
-})(1, 1);
-for (let i = 0; i < 35; i++) {
-  const x = 1 + rnd(N - 2), y = 1 + rnd(N - 2);
-  if (grid[y][x] && ((!grid[y][x-1] && !grid[y][x+1]) || (!grid[y-1][x] && !grid[y+1][x]))) grid[y][x] = 0;
-}
-const DOOR = [N - 2, N - 1];
-const solid = (cx, cy) => cx < 0 || cy < 0 || cx >= N || cy >= N || grid[cy][cx] === 1;
-const cellOf = v => Math.round(v / CS);
-const hit = (x, z) => [[-1,-1],[1,-1],[-1,1],[1,1]].some(([a, b]) => solid(cellOf(x + a * RAD), cellOf(z + b * RAD)));
-function move(o, dx, dz) { if (!hit(o.x + dx, o.z)) o.x += dx; if (!hit(o.x, o.z + dz)) o.z += dz; }
+// Không còn tường: chỉ chặn không cho đi ra ngoài sàn
+const outside = (x, z) => x < RAD || z < RAD || x > SIZE - RAD || z > SIZE - RAD;
+function move(o, dx, dz) { if (!outside(o.x + dx, o.z)) o.x += dx; if (!outside(o.x, o.z + dz)) o.z += dz; }
 
 function tex(base, n, rep) {
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -167,40 +163,29 @@ function tex(base, n, rep) {
   }
   const tx = new THREE.CanvasTexture(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rep, rep); return tx;
 }
-let walls = 0;
-for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grid[y][x] && !(x === DOOR[0] && y === DOOR[1])) walls++;
-const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(CS, WH, CS),
-  new THREE.MeshStandardMaterial({ map: tex('#4a3b36', 160, 1), roughness: .95 }), walls);
-let wi = 0; const mtx = new THREE.Matrix4();
-for (let y = 0; y < N; y++) for (let x = 0; x < N; x++)
-  if (grid[y][x] && !(x === DOOR[0] && y === DOOR[1])) { mtx.setPosition(x * CS, WH / 2, y * CS); wallMesh.setMatrixAt(wi++, mtx); }
-scene.add(wallMesh);
 
-const mid = (N - 1) / 2 * CS;
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(N * CS, N * CS),
-  new THREE.MeshStandardMaterial({ map: tex('#2a1f1c', 200, N * CS / 4), roughness: 1 }));
-ground.rotation.x = -Math.PI / 2; ground.position.set(mid, 0, mid); scene.add(ground);
-const ceil = new THREE.Mesh(new THREE.PlaneGeometry(N * CS, N * CS), new THREE.MeshStandardMaterial({ color: 0x120a0a }));
-ceil.rotation.x = Math.PI / 2; ceil.position.set(mid, WH, mid); scene.add(ceil);
+// Sàn
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(SIZE, SIZE),
+  new THREE.MeshStandardMaterial({ map: tex('#2a1f1c', 200, SIZE / 4), roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.position.set(SIZE / 2, 0, SIZE / 2); scene.add(ground);
 
-const door = new THREE.Mesh(new THREE.BoxGeometry(CS * .9, WH * .95, .25), new THREE.MeshStandardMaterial({ color: 0x5a2d0c }));
-door.position.set(DOOR[0] * CS, WH * .475, DOOR[1] * CS); scene.add(door);
+// Cửa thoát hiểm
+const door = new THREE.Mesh(new THREE.BoxGeometry(2.8, WH * .95, .25), new THREE.MeshStandardMaterial({ color: 0x5a2d0c }));
+door.position.set(DOOR_POS[0], WH * .475, DOOR_POS[1]); scene.add(door);
 
-// ---------- Vật phẩm ----------
-const spots = [];
-for (let y = 1; y < N; y += 2) for (let x = 1; x < N; x += 2) spots.push([x, y]);
-function pick(minD, from) {
-  let s; do { s = spots[rnd(spots.length)]; } while (Math.abs(s[0] - from[0]) + Math.abs(s[1] - from[1]) < minD);
-  return s;
-}
+// Chìa khóa
 const key = new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 8, 16), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x886600 }));
-const ks = pick(14, [1, 1]); key.position.set(ks[0] * CS, .9, ks[1] * CS);
+key.position.set(KEY_POS[0], .9, KEY_POS[1]);
 key.add(new THREE.PointLight(0xffd700, 1, 6)); scene.add(key);
-const batteries = [];
-for (let i = 0; i < 4; i++) {
+
+// Pin
+const batteries = BAT_POS.map(([x, z]) => {
   const b = new THREE.Mesh(new THREE.BoxGeometry(.18, .32, .18), new THREE.MeshBasicMaterial({ color: 0x33ff66 }));
-  const s = pick(4, [1, 1]); b.position.set(s[0] * CS, .6, s[1] * CS); scene.add(b); batteries.push(b);
-}
+  b.position.set(x, .6, z); scene.add(b); return b;
+});
+// =====================================================
+//  HẾT PHẦN BẢN ĐỒ
+// =====================================================
 
 // ---------- Quái vật cầm búa ----------
 const mat = (c, e = 0) => new THREE.MeshStandardMaterial({ color: c, emissive: e, roughness: .8 });
@@ -215,7 +200,7 @@ hammer.position.set(.6, .8, .2); hammer.rotation.x = Math.PI / 4; monster.add(ha
 const monsterLight = new THREE.PointLight(0xff2200, .8, 7);
 monsterLight.position.set(0, 2.3, .5);
 monster.add(monsterLight);
-const ms = pick(14, [1, 1]); monster.position.set(ms[0] * CS, 0, ms[1] * CS); scene.add(monster);
+monster.position.set(MONSTER_POS[0], 0, MONSTER_POS[1]); scene.add(monster);
 
 // ---------- Âm thanh ----------
 let ac, master;
@@ -248,7 +233,7 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => keys[e.code] = false);
 
-const p = camera.position; p.set(CS, 1.6, CS);
+const p = camera.position; p.set(PLAYER_POS[0], 1.6, PLAYER_POS[1]);
 const doorDist = () => Math.hypot(p.x - door.position.x, p.z - door.position.z);
 const near = (o, r) => Math.hypot(p.x - o.position.x, p.z - o.position.z) < r;
 let battery = 1, stamina = 1, tired = false, t = 0, stepT = 0, beatT = 0;
@@ -276,34 +261,8 @@ function endGame(win) {
   if (!win) thump(45, 1, .6);
 }
 
-// ---------- AI quái vật ----------
-const kk = c => c[0] + ',' + c[1];
-function nextStep(from, to) {
-  if (from[0] === to[0] && from[1] === to[1]) return from;
-  const prev = new Map([[kk(from), null]]), q = [from];
-  while (q.length) {
-    const c = q.shift();
-    if (c[0] === to[0] && c[1] === to[1]) break;
-    for (const [dx, dy] of dirs) {
-      const n = [c[0] + dx, c[1] + dy];
-      if (solid(n[0], n[1]) || prev.has(kk(n))) continue;
-      prev.set(kk(n), c); q.push(n);
-    }
-  }
-  if (!prev.has(kk(to))) return from;
-  let c = to, pr = prev.get(kk(c));
-  while (pr && !(pr[0] === from[0] && pr[1] === from[1])) { c = pr; pr = prev.get(kk(c)); }
-  return c;
-}
-function canSee(a, b) {
-  const d = Math.hypot(b.x - a.x, b.z - a.z), n = Math.ceil(d / .5);
-  for (let i = 1; i < n; i++) {
-    const f = i / n;
-    if (solid(cellOf(a.x + (b.x - a.x) * f), cellOf(a.z + (b.z - a.z) * f))) return false;
-  }
-  return true;
-}
-let chaseTimer = 0, lastSeen = [1, 1], target = spots[rnd(spots.length)];
+// ---------- AI quái vật (không còn tường nên đi thẳng) ----------
+let chaseTimer = 0, target = [rnd(SIZE), rnd(SIZE)];
 
 // ---------- Vòng lặp ----------
 const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), mv = new THREE.Vector3();
@@ -329,17 +288,17 @@ function update(dt) {
   light.intensity = flashOn && battery > 0 ? 2.4 * flick : 0;
 
   const dist = Math.hypot(p.x - monster.position.x, p.z - monster.position.z);
-  const sees = canSee(monster.position, p) && (dist < 7 || (flashOn && battery > 0 && dist < 14));
+  const sees = dist < 7 || (flashOn && battery > 0 && dist < 14);
   const hears = sprint ? dist < 16 : moving ? dist < 5 : dist < 2;
-  const pc = [cellOf(p.x), cellOf(p.z)], mc = [cellOf(monster.position.x), cellOf(monster.position.z)];
-  if (sees || hears) { chaseTimer = 4; lastSeen = pc; }
+  if (sees || hears) chaseTimer = 4;
   chaseTimer = Math.max(0, chaseTimer - dt);
   const chasing = chaseTimer > 0;
-  if (chasing) target = lastSeen;
-  else if (mc[0] === target[0] && mc[1] === target[1]) target = spots[rnd(spots.length)];
   let gx, gz;
-  if (sees && mc[0] === pc[0] && mc[1] === pc[1]) { gx = p.x; gz = p.z; }
-  else { const s = nextStep(mc, target); gx = s[0] * CS; gz = s[1] * CS; }
+  if (chasing) { gx = p.x; gz = p.z; }
+  else {
+    if (Math.hypot(target[0] - monster.position.x, target[1] - monster.position.z) < 1) target = [rnd(SIZE), rnd(SIZE)];
+    gx = target[0]; gz = target[1];
+  }
   const dx = gx - monster.position.x, dz = gz - monster.position.z, dl = Math.hypot(dx, dz);
   if (dl > .05) {
     const sp = Math.min(dl, (chasing ? 3.7 : 1.7) * mult * dt);
