@@ -1879,7 +1879,14 @@ function hitPlayer(force) {
   $('flash').style.opacity = 1; setTimeout(function () { $('flash').style.opacity = 0; }, 150); snd(60, 0.35, 'square', 0.3);
   if (hp <= 0) caught(); else { say('Granny đánh trúng bạn! Chạy đi!'); hud(); }
 }
-function banner(t, ms) { const b = $('day'); b.textContent = t; b.style.display = 'flex'; freeze = ms / 1000; }
+function banner(t, ms) {
+  const b = $('day');
+  if (!b) return;
+
+  b.textContent = t;
+  b.style.display = 'flex';
+  freeze = ms / 1000;
+}
 function caught() {
   day++; document.body.classList.remove('chase');
   if (day > 5) {
