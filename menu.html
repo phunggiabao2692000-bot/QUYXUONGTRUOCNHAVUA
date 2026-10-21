@@ -3,95 +3,821 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ngày 1??? - Menu</title>
-<style>
-  body{margin:0;overflow:hidden;background:#000;font-family:'Segoe UI',Roboto,Arial,sans-serif;user-select:none}
-  #menu{position:absolute;inset:0;overflow:hidden;background:#0a0908}
-  #bg{position:absolute;inset:0;animation:fl 7s infinite;background:radial-gradient(ellipse at 55% 40%,#4a463f 0%,#23201c 55%,#0b0a09 100%)}
-  #floor{position:absolute;left:0;right:0;bottom:0;height:20%;background:repeating-linear-gradient(90deg,#1b1713 0 38px,#120f0c 38px 42px)}
-  #stairs{position:absolute;right:0;bottom:0;width:26%;height:52%;background:#0d0b0a;clip-path:polygon(0 100%,100% 0,100% 100%)}
-  #doorway{position:absolute;left:40%;bottom:18%;width:27%;height:70%;box-sizing:border-box;border:14px solid #4a3522;border-bottom:0;background:linear-gradient(#171513,#38342e)}
-  #monster{position:absolute;left:50%;bottom:0;height:92%;transform:translateX(-50%);filter:drop-shadow(0 0 18px rgba(255,255,255,.08))}
-  #shade{position:absolute;inset:0;background:radial-gradient(circle at 55% 50%,transparent 30%,rgba(0,0,0,.85) 100%)}
-  @keyframes fl{0%,100%{opacity:1}92%{opacity:.88}95%{opacity:1}97%{opacity:.72}}
-  @media (prefers-reduced-motion:reduce){#bg{animation:none}}
-  #gtitle{position:absolute;top:22px;right:30px;color:#a00;font-size:30px;letter-spacing:6px;text-shadow:0 0 10px #000}
-  #mbox{position:absolute;left:9%;top:14%}
-  .mbtn{display:block;width:250px;min-height:60px;background:#111114;color:#fff;border:0;border-radius:0;font-family:inherit;font-size:36px;padding:8px 0;margin:0;cursor:pointer;text-align:center;letter-spacing:1px}
-  .mbtn:hover,.mbtn:focus-visible{background:#2a0a0a;outline:2px solid #a00}
-  #cont{width:250px;text-align:center;color:#fff;font-size:24px;margin:2px 0 28px;text-shadow:0 0 6px #000;min-height:30px}
-  #set{margin-top:16px}
-  #langsw{position:relative;display:flex;width:180px;height:70px;margin:28px 0 0 34px;border:4px solid #8a8a8a;border-radius:35px;overflow:hidden;cursor:pointer;box-sizing:border-box}
-  #langsw div.l{flex:1;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
-  #lv{background:#c8102e;color:#ffde00}#le{background:#1b2f6b;color:#fff}
-  #knob{position:absolute;top:3px;left:calc(100% - 59px);width:56px;height:56px;border-radius:50%;background:#fff;transition:left .2s}
-  #langsw.en #knob{left:3px}
-  #hint{position:absolute;bottom:14px;width:100%;text-align:center;color:#aaa;font-size:14px;text-shadow:0 0 6px #000}
-  @media (max-width:700px){#mbox{left:50%;transform:translateX(-50%)}#doorway{opacity:.4}}
+<title>GRANNY - Horror Menu</title>
 
-  #setp{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.78);align-items:center;justify-content:center}
-  #setp.on{display:flex}
-  #setbox{width:min(420px,88vw);background:#111114;border:1px solid #522;padding:22px 26px;color:#ddd}
-  #setbox h2{margin:0 0 10px;color:#b00;letter-spacing:3px;font-size:26px}
-  #setbox label{display:block;margin:14px 0;font-size:16px}
-  #setbox label>span{display:flex;justify-content:space-between;margin-bottom:6px}
-  #setbox input[type=range]{width:100%;accent-color:#a00}
-  #setbox .chk{display:flex;align-items:center;gap:10px}
-  #setbox .chk>span{display:inline;margin:0}
-  .sbtn{padding:10px 22px;font-size:18px;cursor:pointer;background:#600;color:#fff;border:1px solid #c00;font-family:inherit;margin:8px 8px 0 0}
-  .sbtn:hover{background:#800}
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  color: white;
+  font-family: "Segoe UI", Arial, sans-serif;
+  user-select: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+#menu {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ================= SCENE ================= */
+
+#bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 52% 35%,
+      #39332b 0%,
+      #171411 36%,
+      #080706 72%,
+      #000 100%);
+  animation: flicker 7s infinite;
+}
+
+@keyframes flicker {
+  0%, 89%, 93%, 100% { filter: brightness(1); }
+  90% { filter: brightness(.65); }
+  92% { filter: brightness(.85); }
+  96% { filter: brightness(.45); }
+  97% { filter: brightness(1); }
+}
+
+/* Bậc cầu thang */
+
+#stairs {
+  position: absolute;
+  left: 22%;
+  bottom: -3%;
+  width: 60%;
+  height: 72%;
+  background: repeating-linear-gradient(
+    to bottom,
+    #29221b 0px,
+    #29221b 8px,
+    #100d0b 9px,
+    #100d0b 25px
+  );
+  clip-path: polygon(
+    0 100%, 0 85%, 13% 85%, 13% 72%,
+    26% 72%, 26% 59%, 39% 59%, 39% 46%,
+    52% 46%, 52% 33%, 65% 33%, 65% 20%,
+    78% 20%, 78% 7%, 100% 7%, 100% 100%
+  );
+  opacity: .78;
+  filter: drop-shadow(0 0 15px #000);
+}
+
+/* Lan can */
+
+#rail {
+  position: absolute;
+  left: 25%;
+  bottom: 15%;
+  width: 52%;
+  height: 50%;
+  border-top: 6px solid #30251b;
+  transform: skewY(-28deg);
+  opacity: .5;
+}
+
+/* Khung cửa tối */
+
+#doorway {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(360px, 48vw);
+  height: 82%;
+  transform: translateX(-50%);
+  border: 12px solid #292017;
+  border-bottom: 0;
+  background: linear-gradient(
+    90deg,
+    #050403,
+    #15110d 45%,
+    #080605
+  );
+  box-shadow: 0 0 45px #000;
+  perspective: 900px;
+  z-index: 2;
+}
+
+/* Ánh đèn vàng từ trên xuống */
+
+#lamp {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 50%;
+  width: 9px;
+  height: 15px;
+  transform: translateX(-50%);
+  border-radius: 0 0 5px 5px;
+  background: #fff0bd;
+  box-shadow:
+    0 0 8px 4px #fff0bd,
+    0 0 25px 12px rgba(255, 220, 150, .8);
+}
+
+#spotlight {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 50%;
+  width: 150%;
+  height: 110%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 224, 157, .2),
+    rgba(255, 220, 155, .09) 40%,
+    transparent 100%
+  );
+  clip-path: polygon(48% 0, 52% 0, 100% 100%, 0 100%);
+}
+
+/* ================= GRANNY ================= */
+
+#monster {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 0;
+  height: 88%;
+  width: auto;
+  max-width: 90%;
+  overflow: visible;
+  transform-origin: 50% 55%;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 0 14px rgba(0, 0, 0, .9));
+  animation: grannyBackflip 6s ease-in-out infinite;
+}
+
+/*
+  Backflip: Granny xoay người qua đầu.
+  Sau cú lộn, Granny đứng lại và ngó quanh.
+*/
+
+@keyframes grannyBackflip {
+  0%, 22%, 100% {
+    transform: translateX(-50%) rotateX(0deg) rotateZ(0deg);
+  }
+
+  28% {
+    transform: translateX(-50%) translateY(-12px)
+      rotateX(70deg) rotateZ(-5deg);
+  }
+
+  34% {
+    transform: translateX(-50%) translateY(-24px)
+      rotateX(160deg) rotateZ(0deg);
+  }
+
+  40% {
+    transform: translateX(-50%) translateY(-14px)
+      rotateX(250deg) rotateZ(5deg);
+  }
+
+  46% {
+    transform: translateX(-50%) rotateX(360deg) rotateZ(0deg);
+  }
+
+  52% {
+    transform: translateX(-50%) rotateX(360deg) rotateZ(-4deg);
+  }
+
+  58% {
+    transform: translateX(-50%) rotateX(360deg) rotateZ(4deg);
+  }
+
+  64% {
+    transform: translateX(-50%) rotateX(360deg) rotateZ(0deg);
+  }
+}
+
+/* Đầu Granny nhìn sang trái và phải */
+
+#head {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lookAround 3.4s ease-in-out infinite;
+}
+
+@keyframes lookAround {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-17deg); }
+  45% { transform: rotate(-17deg); }
+  70% { transform: rotate(17deg); }
+  90% { transform: rotate(17deg); }
+}
+
+/* Bóng tối bao quanh cảnh */
+
+#shade {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    transparent 0%,
+    rgba(0, 0, 0, .2) 30%,
+    rgba(0, 0, 0, .8) 75%,
+    #000 100%
+  );
+}
+
+/* ================= MAIN MENU ================= */
+
+#gtitle {
+  position: absolute;
+  z-index: 8;
+  top: 24px;
+  right: 30px;
+  color: #9c0000;
+  font-size: clamp(20px, 3vw, 34px);
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-shadow: 0 0 14px #700;
+}
+
+#mbox {
+  position: absolute;
+  z-index: 8;
+  top: 23%;
+  left: 7%;
+  width: 260px;
+}
+
+.mbtn {
+  display: block;
+  width: 250px;
+  min-height: 57px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #3b3030;
+  background: rgba(8, 7, 7, .94);
+  color: #ddd;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.mbtn:hover,
+.mbtn:focus-visible {
+  outline: 2px solid #a00;
+  background: #380707;
+  color: white;
+  box-shadow: 0 0 16px #650000;
+}
+
+/* PLAY dính máu */
+
+#play {
+  min-height: 75px;
+  color: #d40000;
+  font-size: 38px;
+  font-weight: 1000;
+  letter-spacing: 7px;
+  border-color: #5c0000;
+  text-shadow:
+    0 0 4px #f00,
+    0 0 12px #800,
+    2px 4px 2px #250000;
+}
+
+#play:hover {
+  color: #ff2424;
+  text-shadow: 0 0 10px #f00, 0 0 25px #900;
+}
+
+#cont {
+  width: 250px;
+  min-height: 28px;
+  padding: 6px;
+  text-align: center;
+  color: #aaa;
+  font-size: 15px;
+  text-shadow: 0 0 5px #000;
+}
+
+#set {
+  margin-top: 12px;
+}
+
+#langsw {
+  position: relative;
+  display: flex;
+  width: 160px;
+  height: 54px;
+  margin: 24px 0 0 40px;
+  border: 3px solid #aaa;
+  border-radius: 30px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#langsw div.l {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+#lv {
+  background: #c8102e;
+  color: #ffde00;
+}
+
+#le {
+  background: #1b2f6b;
+  color: #fff;
+}
+
+#knob {
+  position: absolute;
+  top: 2px;
+  left: calc(100% - 44px);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  transition: left .2s;
+}
+
+#langsw.en #knob {
+  left: 2px;
+}
+
+#hint {
+  position: absolute;
+  z-index: 8;
+  bottom: 13px;
+  width: 100%;
+  padding: 0 10px;
+  text-align: center;
+  color: #aaa;
+  font-size: 12px;
+  text-shadow: 0 0 6px #000;
+}
+
+/* ================= MODE SELECTION ================= */
+
+#modePanel {
+  display: none;
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  background: rgba(0, 0, 0, .82);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 17px;
+}
+
+#modePanel.on {
+  display: flex;
+}
+
+#modePanel h2 {
+  margin: 0 0 15px;
+  color: #b00000;
+  font-size: clamp(27px, 5vw, 45px);
+  letter-spacing: 5px;
+  text-shadow: 0 0 16px #900;
+}
+
+.modeBtn {
+  width: min(330px, 82vw);
+  padding: 16px 12px;
+  background: #100d0d;
+  border: 2px solid #710000;
+  color: #eee;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  cursor: pointer;
+}
+
+.modeBtn:hover {
+  background: #650000;
+  box-shadow: 0 0 20px #900;
+}
+
+/* ================= NIGHTMARE WARNING ================= */
+
+#warning {
+  display: none;
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  padding: 24px;
+  background: rgba(0, 0, 0, .97);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+#warning.on {
+  display: flex;
+}
+
+#warning h2 {
+  color: #ff2020;
+  font-size: clamp(24px, 4.5vw, 42px);
+  line-height: 1.8;
+  letter-spacing: 1px;
+  text-shadow: 0 0 15px #a00;
+}
+
+/* ================= SETTINGS ================= */
+
+/* SETTINGS - BẢNG MỜ */
+#setp {
+  display: none;
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  background: rgba(0, 0, 0, .78);
+  backdrop-filter: blur(5px);
+  align-items: center;
+  justify-content: center;
+}
+
+#setp.on {
+  display: flex;
+}
+
+#setbox {
+  width: min(440px, 88vw);
+  padding: 30px;
+  color: #eee;
+  background: rgba(15, 12, 12, .91);
+  border: 1px solid #780000;
+  box-shadow: 0 0 30px rgba(120, 0, 0, .3);
+}
+
+#setbox h2 {
+  margin: 0 0 28px;
+  color: #c00;
+  text-align: center;
+  font-size: 32px;
+  letter-spacing: 5px;
+}
+
+.settingRow {
+  margin: 25px 0;
+}
+
+.settingTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.settingTitle b {
+  color: #f22;
+  font-size: 15px;
+}
+
+.settingRow input[type="range"] {
+  width: 100%;
+  height: 8px;
+  cursor: pointer;
+  accent-color: #d00000;
+}
+
+.settingRow input[type="range"]::-webkit-slider-thumb {
+  cursor: pointer;
+}
+
+#settingButtons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.sbtn {
+  padding: 12px 20px;
+  background: #350606;
+  color: #fff;
+  border: 1px solid #a00;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.sbtn:hover {
+  background: #800;
+}
+
+#settingsHint {
+  margin-top: 15px;
+  text-align: center;
+  color: #888;
+  font-size: 12px;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 700px) {
+  #mbox {
+    top: auto;
+    left: 50%;
+    bottom: 12%;
+    width: 250px;
+    transform: translateX(-50%);
+  }
+
+  #mbox .mbtn {
+    width: 250px;
+  }
+
+  #langsw {
+    margin-left: 45px;
+  }
+
+  #gtitle {
+    top: 15px;
+    right: 15px;
+  }
+
+  #doorway {
+    width: 65vw;
+    height: 80%;
+  }
+
+  #stairs {
+    left: 5%;
+    width: 90%;
+  }
+
+  #hint {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bg, #monster, #head {
+    animation: none;
+  }
+}
 </style>
 </head>
+
 <body>
 <div id="menu">
+
+  <!-- CẢNH KINH DỊ -->
   <div id="bg">
-    <div id="floor"></div><div id="stairs"></div>
+    <div id="stairs"></div>
+    <div id="rail"></div>
+
     <div id="doorway">
-      <svg id="monster" viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs><linearGradient id="gw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9c7bf"/><stop offset="1" stop-color="#4b4944"/></linearGradient></defs>
-        <path d="M68 118 L132 118 L168 420 L32 420 Z" fill="url(#gw)"/>
-        <line x1="132" y1="135" x2="146" y2="285" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
-        <line x1="68" y1="135" x2="52" y2="262" stroke="#b9a58f" stroke-width="13" stroke-linecap="round"/>
-        <line x1="40" y1="280" x2="80" y2="185" stroke="#7a4e24" stroke-width="10" stroke-linecap="round"/>
-        <line x1="64" y1="222" x2="80" y2="185" stroke="#8a0000" stroke-width="11" stroke-linecap="round"/>
-        <ellipse cx="100" cy="86" rx="27" ry="33" fill="#cbc3b6"/>
-        <path d="M72 80 Q100 38 128 80 L128 66 Q100 28 72 66 Z" fill="#8f8a82"/>
-        <circle cx="90" cy="84" r="4.5" fill="#fff"/><circle cx="110" cy="84" r="4.5" fill="#fff"/>
-        <circle cx="90" cy="84" r="1.6" fill="#a00"/><circle cx="110" cy="84" r="1.6" fill="#a00"/>
-        <ellipse cx="100" cy="110" rx="6" ry="9" fill="#2a0808"/>
+      <div id="lamp"></div>
+      <div id="spotlight"></div>
+
+      <!-- Granny SVG -->
+      <svg id="monster"
+        viewBox="0 0 200 420"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true">
+
+        <defs>
+          <linearGradient id="dress" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#56534c"/>
+            <stop offset=".5" stop-color="#c1beb4"/>
+            <stop offset="1" stop-color="#45423d"/>
+          </linearGradient>
+
+          <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d4cbbb"/>
+            <stop offset="1" stop-color="#8e8578"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Chân -->
+        <path d="M58 330 L53 393 L85 393 L92 330 Z" fill="#50473d"/>
+        <path d="M108 330 L117 393 L148 393 L139 330 Z" fill="#39332d"/>
+
+        <!-- Giày -->
+        <path d="M51 389 L84 389 L91 405 L45 405 Z" fill="#171311"/>
+        <path d="M116 389 L148 389 L158 405 L117 405 Z" fill="#171311"/>
+
+        <!-- Váy / thân -->
+        <path d="M72 118 L128 118 L143 250 L164 365 L30 365 L55 250 Z"
+          fill="url(#dress)" stroke="#302923" stroke-width="3"/>
+
+        <!-- Cổ -->
+        <path d="M88 105 L112 105 L114 133 L86 133 Z"
+          fill="url(#skin)"/>
+
+        <!-- Tay trái -->
+        <g id="leftArm">
+          <path d="M66 140 L48 218 L38 269"
+            fill="none" stroke="#b3a794" stroke-width="17"
+            stroke-linecap="round"/>
+          <path d="M38 269 L31 288"
+            fill="none" stroke="#b3a794" stroke-width="13"
+            stroke-linecap="round"/>
+          <path d="M31 288 L22 297 M31 288 L36 301 M31 288 L28 305"
+            stroke="#b3a794" stroke-width="5" stroke-linecap="round"/>
+        </g>
+
+        <!-- Tay phải -->
+        <g id="rightArm">
+          <path d="M134 140 L151 216 L157 270"
+            fill="none" stroke="#b3a794" stroke-width="17"
+            stroke-linecap="round"/>
+          <path d="M157 270 L164 288"
+            fill="none" stroke="#b3a794" stroke-width="13"
+            stroke-linecap="round"/>
+          <path d="M164 288 L172 297 M164 288 L159 301 M164 288 L168 305"
+            stroke="#b3a794" stroke-width="5" stroke-linecap="round"/>
+        </g>
+
+        <!-- Đầu và mặt -->
+        <g id="head">
+          <path d="M72 66 Q69 37 100 34 Q131 37 128 66 L125 101 Q118 124 100 126 Q81 122 75 101 Z"
+            fill="url(#skin)" stroke="#4a4037" stroke-width="2"/>
+
+          <!-- Tóc -->
+          <path d="M71 78 Q62 43 85 28 Q105 15 126 34 Q142 48 128 80
+                   L120 58 Q101 48 82 62 L77 91 Z"
+            fill="#77736b"/>
+
+          <path d="M76 58 Q98 43 124 59"
+            fill="none" stroke="#a7a198" stroke-width="5"/>
+
+          <!-- Lông mày -->
+          <path d="M80 74 L95 78 M105 78 L120 74"
+            stroke="#494038" stroke-width="5" stroke-linecap="round"/>
+
+          <!-- Mắt -->
+          <ellipse cx="89" cy="84" rx="8" ry="7" fill="#f5eee0"/>
+          <ellipse cx="111" cy="84" rx="8" ry="7" fill="#f5eee0"/>
+          <circle cx="90" cy="84" r="4" fill="#a00000"/>
+          <circle cx="110" cy="84" r="4" fill="#a00000"/>
+          <circle cx="91" cy="83" r="1.5" fill="#000"/>
+          <circle cx="111" cy="83" r="1.5" fill="#000"/>
+
+          <!-- Mũi -->
+          <path d="M100 85 L95 101 L104 101"
+            fill="none" stroke="#78675a" stroke-width="3"/>
+
+          <!-- Miệng -->
+          <path d="M84 108 Q100 117 116 107 Q100 126 84 108"
+            fill="#280707" stroke="#4a1717" stroke-width="2"/>
+
+          <path d="M91 112 L96 115 L101 112 L106 115 L110 111"
+            fill="none" stroke="#e6d7c5" stroke-width="2"/>
+        </g>
+
+        <!-- Vết bẩn trên váy -->
+        <path d="M62 220 L74 232 M124 254 L135 267 M67 292 L78 300"
+          stroke="#2a1712" stroke-width="5" opacity=".8"/>
+
+        <!-- Bóng dưới chân -->
+        <ellipse cx="100" cy="407" rx="65" ry="8"
+          fill="#000" opacity=".8"/>
       </svg>
     </div>
+
     <div id="shade"></div>
   </div>
+
+  <!-- MENU CHÍNH -->
   <div id="gtitle"></div>
+
   <div id="mbox">
-    <button class="mbtn" id="play"></button>
+    <button class="mbtn" id="play">PLAY</button>
     <div id="cont"></div>
-    <button class="mbtn" id="neu"></button>
-    <button class="mbtn" id="set"></button>
+    <button class="mbtn" id="neu">GAME MỚI</button>
+    <button class="mbtn" id="set">CÀI ĐẶT</button>
+
     <div id="langsw" role="button" tabindex="0" aria-label="Language">
-      <div class="l" id="lv">★</div><div class="l" id="le">EN</div><div id="knob"></div>
+      <div class="l" id="lv">★</div>
+      <div class="l" id="le">EN</div>
+      <div id="knob"></div>
     </div>
   </div>
+
   <div id="hint"></div>
 
-  <div id="setp">
-    <div id="setbox">
-      <h2 id="settitle"></h2>
-      <div id="setrows"></div>
-      <button class="sbtn" id="setreset"></button><button class="sbtn" id="setback"></button>
+  <!-- CHỌN CHẾ ĐỘ -->
+  <div id="modePanel">
+    <h2 id="modeTitle">CHỌN CHẾ ĐỘ</h2>
+    <button class="modeBtn" id="normalMode">NORMAL</button>
+    <button class="modeBtn" id="nightmareMode">NIGHTMARE</button>
+    <button class="modeBtn" id="backMode">QUAY LẠI</button>
+  </div>
+
+  <!-- CẢNH BÁO NIGHTMARE -->
+  <div id="warning">
+    <h2>
+      GRANNY ĐI NHANH HƠN!!!<br>
+      PIN HẾT NHANH HƠN<br>
+      GRANNY ONE HIT ONE KILL!!!
+    </h2>
+    <button class="modeBtn" id="confirmNightmare">TIẾP TỤC</button>
+    <button class="modeBtn" id="cancelNightmare">QUAY LẠI</button>
+  </div>
+
+  <!-- CÀI ĐẶT -->
+
+<div id="setp">
+  <div id="setbox">
+    <h2>SETTINGS</h2>
+
+    <div class="settingRow">
+      <div class="settingTitle">
+        <span>VOLUME</span>
+        <b id="volumeValue">MAX</b>
+      </div>
+      <input
+        type="range"
+        id="volumeSlider"
+        min="0"
+        max="100"
+        value="100"
+        aria-label="Volume"
+      >
+    </div>
+
+    <div class="settingRow">
+      <div class="settingTitle">
+        <span>GRAPHICS</span>
+        <b id="graphicsValue">MAX</b>
+      </div>
+      <input
+        type="range"
+        id="graphicsSlider"
+        min="1"
+        max="3"
+        value="3"
+        step="1"
+        aria-label="Graphics quality"
+      >
+    </div>
+
+    <div id="settingButtons">
+      <button class="sbtn" id="maxSettings">MAX ALL</button>
+      <button class="sbtn" id="closeSettings">BACK</button>
+    </div>
+
+    <div id="settingsHint">
+      GRAPHICS: LOW / MEDIUM / HIGH
     </div>
   </div>
 </div>
 
+
 <script>
 const $ = id => document.getElementById(id);
-const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-const GAME_URL = 'index.html'; // file game
 
-let day = 1, lang = 'vi';
-const DEF = { vol: 70, sens: 100, bri: 100, fov: 75, shake: true };
+const save = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {}
+};
+
+const GAME_URL = 'index.html';
+
+let day = 1;
+let lang = 'vi';
+
+const DEF = {
+  vol: 70,
+  sens: 100,
+  bri: 100,
+  fov: 75,
+  shake: true
+};
+
 let S = { ...DEF };
+
 try {
   day = +localStorage.getItem('gh_day') || 1;
   lang = localStorage.getItem('gh_lang') || 'vi';
@@ -99,49 +825,320 @@ try {
 } catch (e) {}
 
 const TX = {
-  vi: { title:'NGÀY {d}???', play:'CHƠI', cont:'Tiếp tục · Ngày {d}', neu:'GAME MỚI', set:'CÀI ĐẶT',
-    vol:'Âm lượng', sens:'Độ nhạy chuột', bri:'Độ sáng môi trường', fov:'Tầm nhìn (FOV)',
-    shake:'Rung màn hình khi quái ở gần', back:'XONG', reset:'Mặc định',
-    hint:'W A S D di chuyển  |  Chuột nhìn  |  Shift chạy  |  F đèn pin  |  E nhặt / mở cửa' },
-  en: { title:'DAY {d}???', play:'PLAY', cont:'Continue · Day {d}', neu:'NEW GAME', set:'SETTINGS',
-    vol:'Volume', sens:'Mouse sensitivity', bri:'Ambient brightness', fov:'Field of view',
-    shake:'Screen shake near monster', back:'DONE', reset:'Reset',
-    hint:'W A S D move  |  Mouse look  |  Shift run  |  F flashlight  |  E pick up / open' }
-};
-const tr = k => TX[lang][k];
+  vi: {
+    title: 'NGÀY {d}???',
+    play: 'PLAY',
+    cont: 'Tiếp tục · Ngày {d}',
+    neu: 'GAME MỚI',
+    set: 'CÀI ĐẶT',
+    vol: 'Âm lượng',
+    sens: 'Độ nhạy chuột',
+    bri: 'Độ sáng môi trường',
+    fov: 'Tầm nhìn (FOV)',
+    shake: 'Rung màn hình khi quái ở gần',
+    back: 'XONG',
+    reset: 'Mặc định',
+    hint: 'W A S D di chuyển | Chuột nhìn | Shift chạy | F đèn pin | E tương tác',
+    mode: 'CHỌN CHẾ ĐỘ',
+    backMode: 'QUAY LẠI',
+    confirm: 'TIẾP TỤC',
+    cancel: 'QUAY LẠI'
+  },
 
-const ROWS = [['vol', 0, 100, '%'], ['sens', 20, 300, '%'], ['bri', 25, 400, '%'], ['fov', 60, 100, '°']];
-$('setrows').innerHTML = ROWS.map(([id, mn, mx]) =>
-  `<label><span><span id="l_${id}"></span><b id="v_${id}"></b></span><input type="range" id="i_${id}" min="${mn}" max="${mx}"></label>`
-).join('') + '<label class="chk"><input type="checkbox" id="i_shake"><span id="l_shake"></span></label>';
-ROWS.forEach(([id]) => $('i_' + id).oninput = e => { S[id] = +e.target.value; render(); });
-$('i_shake').onchange = e => { S.shake = e.target.checked; render(); };
+  en: {
+    title: 'DAY {d}???',
+    play: 'PLAY',
+    cont: 'Continue · Day {d}',
+    neu: 'NEW GAME',
+    set: 'SETTINGS',
+    vol: 'Volume',
+    sens: 'Mouse sensitivity',
+    bri: 'Ambient brightness',
+    fov: 'Field of view',
+    shake: 'Screen shake near monster',
+    back: 'DONE',
+    reset: 'Default',
+    hint: 'W A S D move | Mouse look | Shift run | F flashlight | E interact',
+    mode: 'SELECT MODE',
+    backMode: 'BACK',
+    confirm: 'CONTINUE',
+    cancel: 'BACK'
+  }
+};
+
+const tr = key => TX[lang][key];
+
+const ROWS = [
+  ['vol', 0, 100, '%'],
+  ['sens', 20, 300, '%'],
+  ['bri', 25, 400, '%'],
+  ['fov', 60, 100, '°']
+];
+
+$('setrows').innerHTML = ROWS.map(([id, min, max]) => `
+  <label>
+    <span>
+      <span id="l_${id}"></span>
+      <b id="v_${id}"></b>
+    </span>
+    <input type="range" id="i_${id}" min="${min}" max="${max}">
+  </label>
+`).join('') + `
+  <label class="chk">
+    <input type="checkbox" id="i_shake">
+    <span id="l_shake"></span>
+  </label>
+`;
+
+ROWS.forEach(([id]) => {
+  $('i_' + id).oninput = event => {
+    S[id] = +event.target.value;
+    render();
+  };
+});
+
+$('i_shake').onchange = event => {
+  S.shake = event.target.checked;
+  render();
+};
 
 function render() {
   document.documentElement.lang = lang;
+
   $('gtitle').innerText = tr('title').replace('{d}', day);
   $('play').innerText = tr('play');
   $('cont').innerText = tr('cont').replace('{d}', day);
   $('neu').innerText = tr('neu');
   $('set').innerText = tr('set');
   $('hint').innerText = tr('hint');
+
   $('langsw').className = lang;
-  ROWS.forEach(([id, , , u]) => { $('i_' + id).value = S[id]; $('v_' + id).innerText = S[id] + u; $('l_' + id).innerText = tr(id); });
-  $('i_shake').checked = S.shake; $('l_shake').innerText = tr('shake');
-  $('settitle').innerText = tr('set'); $('setback').innerText = tr('back'); $('setreset').innerText = tr('reset');
+
+  $('modeTitle').innerText = tr('mode');
+  $('backMode').innerText = tr('backMode');
+  $('confirmNightmare').innerText = tr('confirm');
+  $('cancelNightmare').innerText = tr('cancel');
+
+  ROWS.forEach(([id, , , unit]) => {
+    $('i_' + id).value = S[id];
+    $('v_' + id).innerText = S[id] + unit;
+    $('l_' + id).innerText = tr(id);
+  });
+
+  $('i_shake').checked = S.shake;
+  $('l_shake').innerText = tr('shake');
+
+  $('settitle').innerText = tr('set');
+  $('setback').innerText = tr('back');
+  $('setreset').innerText = tr('reset');
+
   save('gh_set', JSON.stringify(S));
 }
 
-// Đánh dấu "đã đi qua menu" rồi chuyển sang game
-const go = () => { try { sessionStorage.setItem('gh_menu', '1'); } catch (e) {} location.href = GAME_URL; };
-$('play').onclick = go;
-$('neu').onclick = () => { day = 1; save('gh_day', 1); go(); };
-$('set').onclick = () => $('setp').classList.add('on');
-$('setback').onclick = () => $('setp').classList.remove('on');
-$('setreset').onclick = () => { S = { ...DEF }; render(); };
-const toggleLang = () => { lang = lang === 'vi' ? 'en' : 'vi'; save('gh_lang', lang); render(); };
+/* ================= HORROR AMBIENCE ================= */
+
+/*
+  Trình duyệt thường chặn âm thanh tự phát trước khi
+  người chơi tương tác. Âm thanh bắt đầu sau lần nhấn đầu.
+*/
+
+let audioContext = null;
+let audioStarted = false;
+let masterGain = null;
+
+function startHorrorMusic() {
+  if (audioStarted) {
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    return;
+  }
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return;
+
+  try {
+    audioContext = new AudioCtx();
+    masterGain = audioContext.createGain();
+    masterGain.gain.value = Math.max(0, S.vol / 100) * 0.12;
+    masterGain.connect(audioContext.destination);
+
+    const frequencies = [43, 44.5, 65.4];
+
+    frequencies.forEach((frequency, index) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = index === 1 ? 'triangle' : 'sine';
+      oscillator.frequency.value = frequency;
+      gain.gain.value = index === 0 ? 0.55 : 0.18;
+
+      oscillator.connect(gain);
+      gain.connect(masterGain);
+      oscillator.start();
+    });
+
+    audioStarted = true;
+  } catch (e) {
+    // Nếu thiết bị không hỗ trợ âm thanh, menu vẫn hoạt động.
+  }
+}
+
+document.addEventListener('pointerdown', startHorrorMusic, {
+  once: true
+});
+
+document.addEventListener('keydown', startHorrorMusic, {
+  once: true
+});
+
+/* ================= GAME MODE ================= */
+
+function go(mode = 'normal', newGame = false) {
+  try {
+    sessionStorage.setItem('gh_menu', '1');
+    sessionStorage.setItem('gh_mode', mode);
+
+    if (newGame) {
+      localStorage.setItem('gh_day', '1');
+    }
+  } catch (e) {}
+
+  location.href = GAME_URL;
+}
+
+/* PLAY mở lựa chọn chế độ */
+
+$('play').onclick = () => {
+  $('modePanel').classList.add('on');
+};
+
+/* GAME MỚI cũng mở lựa chọn chế độ */
+
+$('neu').onclick = () => {
+  $('modePanel').classList.add('on');
+};
+
+/* Quay lại menu chính */
+
+$('backMode').onclick = () => {
+  $('modePanel').classList.remove('on');
+};
+
+/* NORMAL: vào game bình thường */
+
+$('normalMode').onclick = () => {
+  go('normal', true);
+};
+
+/* NIGHTMARE: hiện bảng cảnh báo trước */
+
+$('nightmareMode').onclick = () => {
+  $('modePanel').classList.remove('on');
+  $('warning').classList.add('on');
+};
+
+/* Xác nhận NIGHTMARE */
+
+$('confirmNightmare').onclick = () => {
+  go('nightmare', true);
+};
+
+/* Hủy NIGHTMARE, trở lại lựa chọn chế độ */
+
+$('cancelNightmare').onclick = () => {
+  $('warning').classList.remove('on');
+  $('modePanel').classList.add('on');
+};
+
+/* ================= SETTINGS ================= */
+
+
+/* ================= SETTINGS ================= */
+
+const volumeSlider = $('volumeSlider');
+const graphicsSlider = $('graphicsSlider');
+
+function loadSettings() {
+  try {
+    const volume = localStorage.getItem('gh_volume');
+    const graphics = localStorage.getItem('gh_graphics');
+
+    if (volume !== null) volumeSlider.value = volume;
+    if (graphics !== null) graphicsSlider.value = graphics;
+  } catch (e) {}
+
+  updateSettings();
+}
+
+function updateSettings() {
+  const volume = Number(volumeSlider.value);
+  const graphics = Number(graphicsSlider.value);
+
+  $('volumeValue').innerText =
+    volume === 100 ? 'MAX' : volume + '%';
+
+  $('graphicsValue').innerText =
+    graphics === 3
+      ? 'HIGH / MAX'
+      : graphics === 2
+        ? 'MEDIUM'
+        : 'LOW';
+
+  try {
+    localStorage.setItem('gh_volume', volume);
+    localStorage.setItem('gh_graphics', graphics);
+  } catch (e) {}
+
+  // Điều chỉnh âm lượng nhạc menu nếu Web Audio đang chạy.
+  if (typeof masterGain !== 'undefined' && masterGain && audioContext) {
+    masterGain.gain.setTargetAtTime(
+      volume / 100 * 0.12,
+      audioContext.currentTime,
+      0.05
+    );
+  }
+}
+
+volumeSlider.addEventListener('input', updateSettings);
+graphicsSlider.addEventListener('input', updateSettings);
+
+$('set').onclick = () => {
+  $('setp').classList.add('on');
+};
+
+$('closeSettings').onclick = () => {
+  $('setp').classList.remove('on');
+};
+
+$('maxSettings').onclick = () => {
+  volumeSlider.value = 100;
+  graphicsSlider.value = 3;
+  updateSettings();
+};
+
+loadSettings();
+
+
+/* ================= LANGUAGE ================= */
+
+const toggleLang = () => {
+  lang = lang === 'vi' ? 'en' : 'vi';
+  save('gh_lang', lang);
+  render();
+};
+
 $('langsw').onclick = toggleLang;
-$('langsw').onkeydown = e => { if (e.code === 'Enter' || e.code === 'Space') toggleLang(); };
+
+$('langsw').onkeydown = event => {
+  if (event.code === 'Enter' || event.code === 'Space') {
+    event.preventDefault();
+    toggleLang();
+  }
+};
+
+/* Khởi tạo menu */
+
 render();
 </script>
 </body>
