@@ -876,15 +876,31 @@ function grannyFig(par, y0, x, z, ry, sc) {   // bà già lưng còng, cầm g�
   const gait = { legs: [], arms: [] };
 
 // Hai chân có khớp xoay riêng
+const gait = { legs: [], arms: [] };
+
 [-1, 1].forEach(function (s) {
-  const leg = new THREE.Group();
-  leg.position.set(s * 0.075, 0.45, 0);
-  g.add(leg);
+  const hip = new THREE.Group();
+  hip.position.set(s * 0.075, 0.45, 0);
+  g.add(hip);
 
-  cyl(leg, 0.04, 0.03, 0.46, SK, 0, -0.12, 0);
-  ell(leg, 0.05, 0.035, 0.11, SH, 0, -0.365, 0.04);
+  const thigh = new THREE.Group();
+  hip.add(thigh);
 
-  gait.legs.push({ node: leg, side: s });
+  cyl(thigh, 0.04, 0.03, 0.25, SK, 0, -0.12, 0);
+
+  const knee = new THREE.Group();
+  knee.position.y = -0.24;
+  thigh.add(knee);
+
+  cyl(knee, 0.03, 0.025, 0.23, SK, 0, -0.11, 0);
+  ell(knee, 0.05, 0.035, 0.11, SH, 0, -0.24, 0.04);
+
+  gait.legs.push({
+    hip: hip,
+    thigh: thigh,
+    knee: knee,
+    side: s
+  });
 });
   const sk = new THREE.Mesh(new THREE.LatheGeometry(V([[0.27, 0.22], [0.26, 0.5], [0.2, 0.8], [0.15, 0.98]]), 8), SKIRT); sk.scale.set(1, 1, 0.75); sk.castShadow = true; g.add(sk);   // váy dài
   ell(g, 0.07, 0.1, 0.012, BLD, 0.05, 0.55, 0.17);                                                                                  // vết máu trên váy
@@ -1793,8 +1809,39 @@ RG.map(function (r) { return [r, 0]; }).concat(RU.filter(function (r) { return r
   const r = a[0], l = NAV.filter(function (n) { return Math.abs(n.y - a[1]) < 0.6 && n.x > r[1] + 1 && n.x < r[3] - 1 && n.z > r[2] + 1 && n.z < r[4] - 1; });
   if (l.length > 20) ROOMNAV.push(l);
 });
-function pickPatrol() { const l = ROOMNAV[Math.random() * ROOMNAV.length | 0], n = l[Math.random() * l.length | 0]; return [n.x, n.z, n.y]; }
-const GR = { x: 7.3, z: 26, y: F2, ry: 2.76, st: 'wait', t: 1e9, path: null, pi: 0, pg: null, pgoal: null, lose: 0, rp: 0, cd: 0, look: 0, knows: false, openT: 0, lx: 0, lz: 0, ly: 0, stepT: 0 };
+function pickPatrol() {
+  if (!ROOMNAV.length) return [GR.x, GR.z, GR.y];
+
+  const room = ROOMNAV[Math.random() * ROOMNAV.length | 0];
+
+  // Tính tâm của vùng có thể đi lại
+  let cx = 0, cz = 0;
+  room.forEach(function (n) {
+    cx += n.x;
+    cz += n.z;
+  });
+
+  cx /= room.length;
+  cz /= room.length;
+
+  // Ưu tiên các điểm gần tâm phòng
+  const ranked = room
+    .map(function (n) {
+      return {
+        node: n,
+        distance: Math.hypot(n.x - cx, n.z - cz)
+      };
+    })
+    .sort(function (a, b) {
+      return a.distance - b.distance;
+    });
+
+  const limit = Math.max(1, Math.floor(ranked.length * 0.25));
+  const choice = ranked[Math.random() * limit | 0].node;
+
+  return [choice.x, choice.z, choice.y];
+}
+const GR = { x: 7.3, z: 26, y: F2, ry: 2.76, st: 'wait', t: 8, path: null, pi: 0, pg: null, pgoal: null, lose: 0, rp: 0, cd: 0, look: 0, knows: false, openT: 0, lx: 0, lz: 0, ly: 0, stepT: 0 };
 function grSpeed() { return (GR.st === 'chase' ? 5.4 : GR.st === 'investigate' ? 3.6 : 2.6) * (1 + 0.08 * (day - 1)); }
 function los(ax, az, bx, bz, lv) {
   const d = Math.hypot(bx - ax, bz - az), n = Math.ceil(d / 0.5);
@@ -1914,15 +1961,31 @@ function spiderUpdate(dt) {
 }
 
 // ===== ÁNH SÁNG: vùng tối quanh người chơi =====
+
 function applyLook() {
   const w = mode === 'walk';
-  scene.fog.density = underground ? 0.06 : (w ? 0.042 : 0.007);
-  amb.intensity = underground ? 0.05 : (w ? 0.16 : 0.42); hemi.intensity = underground ? 0.03 : (w ? 0.14 : 0.34); sun.intensity = underground ? 0 : (w ? 0.1 : 0.36);
-  aura.visible = w; aura.intensity = underground ? 1.2 : 0.9;
+
+  scene.fog.density = underground ? 0.05 : (w ? 0.032 : 0.007);
+
+  amb.intensity = underground ? 0.05 : (w ? 0.20 : 0.42);
+  hemi.intensity = underground ? 0.03 : (w ? 0.18 : 0.34);
+  sun.intensity = underground ? 0 : (w ? 0.12 : 0.36);
+
+  aura.visible = w;
+  aura.intensity = underground ? 1.2 : 0.9;
+
   $('dark').style.display = w ? 'block' : 'none';
-  LT.forEach(function (o) { o.l.visible = !underground && bright; });
-  TLIGHTS.forEach(function (l) { l.visible = underground; });
+
+  LT.forEach(function(o) {
+    o.l.visible = !underground && bright;
+  });
+
+  TLIGHTS.forEach(function(l) {
+    l.visible = underground;
+  });
+
   dust.visible = underground;
+}
 }
 function setUnderground(f) { underground = f; applyLook(); }
 
