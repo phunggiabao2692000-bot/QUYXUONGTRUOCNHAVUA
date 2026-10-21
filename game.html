@@ -55,7 +55,7 @@ body.chase #vig{box-shadow:inset 0 0 220px rgba(210,0,0,.6)}
 
 <script>
 var $ = function (i) { return document.getElementById(i); };
-function st(t) { $('st').textContent = t; }
+if ($('st')) $('st').textContent = t;
 function showErr(m) { var b = $('err'); b.textContent = m; b.style.display = 'block'; }
 addEventListener('error', function (e) { showErr('Lỗi: ' + e.message + ' (dòng ' + e.lineno + ')'); });
 st('1. Trang đã chạy, đang kiểm tra thư viện 3D...');
