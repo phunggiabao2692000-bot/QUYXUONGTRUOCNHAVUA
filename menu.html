@@ -2,488 +2,352 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GRANNY - Horror Menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Granny - Horror Game</title>
 
 <style>
 * {
   box-sizing: border-box;
 }
 
+:root {
+  --blood: #a00000;
+  --red: #e00000;
+  --white: #e8e8e8;
+}
+
 body {
   margin: 0;
   overflow: hidden;
   background: #000;
-  color: white;
-  font-family: "Segoe UI", Arial, sans-serif;
-  user-select: none;
+  color: var(--white);
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 button {
   font-family: inherit;
+  cursor: pointer;
+  color: white;
+  background: transparent;
+  border: none;
 }
 
-#menu {
+button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 5px;
+}
+
+#scene {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #000;
+  background:
+    radial-gradient(ellipse at 50% 35%,
+      #242020 0%, #100f0f 35%, #020202 75%);
 }
 
-/* ================= SCENE ================= */
-
-#bg {
+.wall {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  opacity: .35;
   background:
-    radial-gradient(ellipse at 52% 35%,
-      #39332b 0%,
-      #171411 36%,
-      #080706 72%,
-      #000 100%);
-  animation: flicker 7s infinite;
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 95px,
+      #252222 97px,
+      transparent 100px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 100px,
+      #171515 102px,
+      transparent 104px
+    );
 }
 
-@keyframes flicker {
-  0%, 89%, 93%, 100% { filter: brightness(1); }
-  90% { filter: brightness(.65); }
-  92% { filter: brightness(.85); }
-  96% { filter: brightness(.45); }
-  97% { filter: brightness(1); }
-}
-
-/* Bậc cầu thang */
-
-#stairs {
+.spotlight {
   position: absolute;
-  left: 22%;
-  bottom: -3%;
-  width: 60%;
-  height: 72%;
-  background: repeating-linear-gradient(
-    to bottom,
-    #29221b 0px,
-    #29221b 8px,
-    #100d0b 9px,
-    #100d0b 25px
-  );
-  clip-path: polygon(
-    0 100%, 0 85%, 13% 85%, 13% 72%,
-    26% 72%, 26% 59%, 39% 59%, 39% 46%,
-    52% 46%, 52% 33%, 65% 33%, 65% 20%,
-    78% 20%, 78% 7%, 100% 7%, 100% 100%
-  );
-  opacity: .78;
-  filter: drop-shadow(0 0 15px #000);
-}
-
-/* Lan can */
-
-#rail {
-  position: absolute;
-  left: 25%;
-  bottom: 15%;
-  width: 52%;
-  height: 50%;
-  border-top: 6px solid #30251b;
-  transform: skewY(-28deg);
-  opacity: .5;
-}
-
-/* Khung cửa tối */
-
-#doorway {
-  position: absolute;
+  width: min(75vw, 800px);
+  height: min(100vh, 900px);
+  top: -8%;
   left: 50%;
-  bottom: 0;
-  width: min(360px, 48vw);
-  height: 82%;
   transform: translateX(-50%);
-  border: 12px solid #292017;
-  border-bottom: 0;
-  background: linear-gradient(
-    90deg,
-    #050403,
-    #15110d 45%,
-    #080605
+  background: radial-gradient(
+    ellipse at 50% 37%,
+    rgba(255, 238, 195, .23),
+    rgba(180, 165, 130, .09) 30%,
+    transparent 68%
   );
-  box-shadow: 0 0 45px #000;
-  perspective: 900px;
-  z-index: 2;
-}
-
-/* Ánh đèn vàng từ trên xuống */
-
-#lamp {
-  position: absolute;
-  z-index: 5;
-  top: 0;
-  left: 50%;
-  width: 9px;
-  height: 15px;
-  transform: translateX(-50%);
-  border-radius: 0 0 5px 5px;
-  background: #fff0bd;
-  box-shadow:
-    0 0 8px 4px #fff0bd,
-    0 0 25px 12px rgba(255, 220, 150, .8);
-}
-
-#spotlight {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  left: 50%;
-  width: 150%;
-  height: 110%;
-  transform: translateX(-50%);
   pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 224, 157, .2),
-    rgba(255, 220, 155, .09) 40%,
-    transparent 100%
-  );
-  clip-path: polygon(48% 0, 52% 0, 100% 100%, 0 100%);
+  animation: lightFlicker 7s infinite;
 }
 
-/* ================= GRANNY ================= */
+@keyframes lightFlicker {
+  0%, 91%, 94%, 100% { opacity: 1; }
+  92% { opacity: .65; }
+  93% { opacity: .9; }
+  95% { opacity: .72; }
+}
 
-#monster {
+.lamp {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #fff5cf;
+  box-shadow: 0 0 15px 6px #fff1c0,
+              0 0 70px 28px rgba(255, 220, 140, .22);
+}
+
+.stairs {
+  position: absolute;
+  width: min(80vw, 720px);
+  height: 60%;
+  left: 50%;
+  bottom: -5%;
+  transform: translateX(-50%);
+  perspective: 600px;
+  opacity: .9;
+}
+
+.step {
+  position: absolute;
+  left: 50%;
+  width: 100%;
+  height: 10%;
+  transform: translateX(-50%);
+  background: linear-gradient(#34302d, #151312 45%, #050505);
+  border-top: 2px solid #49413a;
+  box-shadow: 0 -4px 12px #000;
+}
+
+.step:nth-child(1) { bottom: 0; width: 100%; }
+.step:nth-child(2) { bottom: 10%; width: 90%; }
+.step:nth-child(3) { bottom: 20%; width: 80%; }
+.step:nth-child(4) { bottom: 30%; width: 70%; }
+.step:nth-child(5) { bottom: 40%; width: 60%; }
+.step:nth-child(6) { bottom: 50%; width: 50%; }
+.step:nth-child(7) { bottom: 60%; width: 40%; }
+.step:nth-child(8) { bottom: 70%; width: 30%; }
+.step:nth-child(9) { bottom: 80%; width: 20%; }
+
+.railing {
+  position: absolute;
+  bottom: 12%;
+  height: 55%;
+  width: 7px;
+  background: linear-gradient(90deg, #080808, #39322b, #050505);
+  transform: rotate(23deg);
+  opacity: .7;
+}
+
+.railing.left { left: 8%; }
+.railing.right { right: 8%; transform: rotate(-23deg); }
+
+#grannyWrap {
   position: absolute;
   z-index: 3;
   left: 50%;
-  bottom: 0;
-  height: 88%;
-  width: auto;
-  max-width: 90%;
+  top: 15%;
+  width: min(42vw, 360px);
+  height: min(63vh, 500px);
+  transform: translateX(-50%);
+  transform-origin: 50% 70%;
+  animation: backflip 7s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(0,0,0,.9));
+}
+
+@keyframes backflip {
+  0%, 16%, 100% { transform: translateX(-50%) rotate(0deg); }
+  22% { transform: translateX(-50%) rotate(-20deg); }
+  30% { transform: translateX(-50%) rotate(-180deg); }
+  38% { transform: translateX(-50%) rotate(-360deg); }
+  45%, 65% { transform: translateX(-50%) rotate(-360deg); }
+  72% { transform: translateX(-50%) rotate(-340deg); }
+  80% { transform: translateX(-50%) rotate(-360deg); }
+}
+
+#granny {
+  width: 100%;
+  height: 100%;
   overflow: visible;
-  transform-origin: 50% 55%;
-  transform-style: preserve-3d;
-  filter: drop-shadow(0 0 14px rgba(0, 0, 0, .9));
-  animation: grannyBackflip 6s ease-in-out infinite;
 }
-
-/*
-  Backflip: Granny xoay người qua đầu.
-  Sau cú lộn, Granny đứng lại và ngó quanh.
-*/
-
-@keyframes grannyBackflip {
-  0%, 22%, 100% {
-    transform: translateX(-50%) rotateX(0deg) rotateZ(0deg);
-  }
-
-  28% {
-    transform: translateX(-50%) translateY(-12px)
-      rotateX(70deg) rotateZ(-5deg);
-  }
-
-  34% {
-    transform: translateX(-50%) translateY(-24px)
-      rotateX(160deg) rotateZ(0deg);
-  }
-
-  40% {
-    transform: translateX(-50%) translateY(-14px)
-      rotateX(250deg) rotateZ(5deg);
-  }
-
-  46% {
-    transform: translateX(-50%) rotateX(360deg) rotateZ(0deg);
-  }
-
-  52% {
-    transform: translateX(-50%) rotateX(360deg) rotateZ(-4deg);
-  }
-
-  58% {
-    transform: translateX(-50%) rotateX(360deg) rotateZ(4deg);
-  }
-
-  64% {
-    transform: translateX(-50%) rotateX(360deg) rotateZ(0deg);
-  }
-}
-
-/* Đầu Granny nhìn sang trái và phải */
 
 #head {
   transform-box: fill-box;
   transform-origin: center;
-  animation: lookAround 3.4s ease-in-out infinite;
+  animation: lookAround 4s ease-in-out infinite alternate;
 }
 
 @keyframes lookAround {
-  0%, 100% { transform: rotate(0deg); }
-  20% { transform: rotate(-17deg); }
-  45% { transform: rotate(-17deg); }
-  70% { transform: rotate(17deg); }
-  90% { transform: rotate(17deg); }
+  0%, 15% { transform: rotate(-12deg) translateX(-3px); }
+  45% { transform: rotate(15deg) translateX(5px); }
+  75% { transform: rotate(-18deg) translateX(-4px); }
+  100% { transform: rotate(8deg); }
 }
 
-/* Bóng tối bao quanh cảnh */
-
-#shade {
+.grannyShadow {
   position: absolute;
-  z-index: 6;
+  z-index: 2;
+  left: 50%;
+  top: 64%;
+  width: min(35vw, 290px);
+  height: 40px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #000;
+  filter: blur(18px);
+  opacity: .9;
+}
+
+.vignette {
+  position: absolute;
   inset: 0;
+  z-index: 4;
   pointer-events: none;
   background: radial-gradient(
-    ellipse at 50% 45%,
-    transparent 0%,
-    rgba(0, 0, 0, .2) 30%,
-    rgba(0, 0, 0, .8) 75%,
+    ellipse at center,
+    transparent 15%,
+    rgba(0,0,0,.35) 55%,
     #000 100%
   );
 }
 
-/* ================= MAIN MENU ================= */
-
-#gtitle {
+#menu {
   position: absolute;
-  z-index: 8;
-  top: 24px;
-  right: 30px;
-  color: #9c0000;
-  font-size: clamp(20px, 3vw, 34px);
-  font-weight: 900;
-  letter-spacing: 5px;
-  text-shadow: 0 0 14px #700;
+  z-index: 10;
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+  width: min(92vw, 500px);
+  text-align: center;
 }
 
-#mbox {
-  position: absolute;
-  z-index: 8;
-  top: 23%;
-  left: 7%;
-  width: 260px;
+.logo {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 6vw, 64px);
+  letter-spacing: 8px;
+  color: #d4d0ca;
+  text-shadow: 0 3px 5px #000, 0 0 25px #000;
 }
 
-.mbtn {
+.menuButton {
   display: block;
-  width: 250px;
-  min-height: 57px;
-  margin: 0;
-  padding: 10px;
-  border: 1px solid #3b3030;
-  background: rgba(8, 7, 7, .94);
-  color: #ddd;
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  cursor: pointer;
+  width: 100%;
+  padding: 8px 12px;
+  margin: 5px 0;
+  font-size: clamp(19px, 3vw, 27px);
+  font-weight: bold;
+  letter-spacing: 5px;
+  color: #eee;
+  text-shadow: 0 2px 5px #000;
   transition: .2s;
 }
 
-.mbtn:hover,
-.mbtn:focus-visible {
-  outline: 2px solid #a00;
-  background: #380707;
-  color: white;
-  box-shadow: 0 0 16px #650000;
+.menuButton:hover {
+  color: #ff2222;
+  transform: scale(1.06);
+  text-shadow: 0 0 14px #a00000;
 }
 
-/* PLAY dính máu */
-
 #play {
-  min-height: 75px;
-  color: #d40000;
-  font-size: 38px;
-  font-weight: 1000;
-  letter-spacing: 7px;
-  border-color: #5c0000;
-  text-shadow:
-    0 0 4px #f00,
-    0 0 12px #800,
-    2px 4px 2px #250000;
+  color: #e00000;
+  font-size: clamp(28px, 5vw, 43px);
+  letter-spacing: 9px;
+  text-shadow: 0 2px #280000, 0 0 14px #580000;
 }
 
 #play:hover {
   color: #ff2424;
-  text-shadow: 0 0 10px #f00, 0 0 25px #900;
+  text-shadow: 0 0 25px red;
 }
 
-#cont {
-  width: 250px;
-  min-height: 28px;
-  padding: 6px;
-  text-align: center;
-  color: #aaa;
-  font-size: 15px;
-  text-shadow: 0 0 5px #000;
-}
-
-#set {
-  margin-top: 12px;
-}
-
-#langsw {
-  position: relative;
-  display: flex;
-  width: 160px;
-  height: 54px;
-  margin: 24px 0 0 40px;
-  border: 3px solid #aaa;
-  border-radius: 30px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-#langsw div.l {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: 900;
-}
-
-#lv {
-  background: #c8102e;
-  color: #ffde00;
-}
-
-#le {
-  background: #1b2f6b;
-  color: #fff;
-}
-
-#knob {
-  position: absolute;
-  top: 2px;
-  left: calc(100% - 44px);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: white;
-  transition: left .2s;
-}
-
-#langsw.en #knob {
-  left: 2px;
-}
-
-#hint {
-  position: absolute;
-  z-index: 8;
-  bottom: 13px;
-  width: 100%;
-  padding: 0 10px;
-  text-align: center;
-  color: #aaa;
-  font-size: 12px;
-  text-shadow: 0 0 6px #000;
-}
-
-/* ================= MODE SELECTION ================= */
-
-#modePanel {
-  display: none;
+#language {
   position: absolute;
   z-index: 12;
-  inset: 0;
-  background: rgba(0, 0, 0, .82);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 17px;
+  right: 18px;
+  top: 15px;
+  font-size: 12px;
+  color: #aaa;
+  border: 1px solid #444;
+  padding: 8px 10px;
 }
 
-#modePanel.on {
-  display: flex;
-}
-
-#modePanel h2 {
-  margin: 0 0 15px;
-  color: #b00000;
-  font-size: clamp(27px, 5vw, 45px);
-  letter-spacing: 5px;
-  text-shadow: 0 0 16px #900;
-}
-
-.modeBtn {
-  width: min(330px, 82vw);
-  padding: 16px 12px;
-  background: #100d0d;
-  border: 2px solid #710000;
-  color: #eee;
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: 3px;
-  cursor: pointer;
-}
-
-.modeBtn:hover {
-  background: #650000;
-  box-shadow: 0 0 20px #900;
-}
-
-/* ================= NIGHTMARE WARNING ================= */
-
-#warning {
+.panel {
   display: none;
-  position: absolute;
-  z-index: 20;
-  inset: 0;
-  padding: 24px;
-  background: rgba(0, 0, 0, .97);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  text-align: center;
-}
-
-#warning.on {
-  display: flex;
-}
-
-#warning h2 {
-  color: #ff2020;
-  font-size: clamp(24px, 4.5vw, 42px);
-  line-height: 1.8;
-  letter-spacing: 1px;
-  text-shadow: 0 0 15px #a00;
-}
-
-/* ================= SETTINGS ================= */
-
-/* SETTINGS - BẢNG MỜ */
-#setp {
-  display: none;
-  position: absolute;
+  position: fixed;
   z-index: 30;
   inset: 0;
-  background: rgba(0, 0, 0, .78);
-  backdrop-filter: blur(5px);
   align-items: center;
   justify-content: center;
+  padding: 18px;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(5px);
 }
 
-#setp.on {
+.panel.open {
   display: flex;
 }
 
-#setbox {
-  width: min(440px, 88vw);
-  padding: 30px;
-  color: #eee;
-  background: rgba(15, 12, 12, .91);
-  border: 1px solid #780000;
-  box-shadow: 0 0 30px rgba(120, 0, 0, .3);
+.panelBox {
+  width: min(92vw, 460px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  border: 1px solid #61534a;
+  background: rgba(8,7,7,.94);
+  box-shadow: 0 0 35px #000;
+  text-align: center;
 }
 
-#setbox h2 {
-  margin: 0 0 28px;
-  color: #c00;
-  text-align: center;
-  font-size: 32px;
+.panelBox h2 {
+  margin: 0 0 24px;
+  font-size: 30px;
   letter-spacing: 5px;
+  color: #ddd;
+}
+
+.panelBox p {
+  line-height: 1.7;
+}
+
+.modeButton {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 15px;
+  border: 1px solid #51413a;
+  background: rgba(35,25,25,.65);
+  font-size: 21px;
+  letter-spacing: 4px;
+  transition: .2s;
+}
+
+.modeButton:hover {
+  border-color: #a00000;
+  color: #ff2222;
+  background: rgba(80,0,0,.25);
+}
+
+.backButton {
+  margin-top: 16px;
+  padding: 10px 25px;
+  border: 1px solid #555;
+  color: #aaa;
+  letter-spacing: 3px;
+}
+
+.backButton:hover {
+  color: white;
+  border-color: white;
 }
 
 .settingRow {
-  margin: 25px 0;
+  margin: 22px 0;
+  text-align: left;
 }
 
 .settingTitle {
@@ -491,276 +355,273 @@ button {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 2px;
+  font-size: 17px;
+  letter-spacing: 3px;
 }
 
 .settingTitle b {
-  color: #f22;
-  font-size: 15px;
+  color: #b7b7b7;
+  font-size: 13px;
+  letter-spacing: 1px;
 }
 
-.settingRow input[type="range"] {
+input[type="range"] {
   width: 100%;
-  height: 8px;
-  cursor: pointer;
-  accent-color: #d00000;
-}
-
-.settingRow input[type="range"]::-webkit-slider-thumb {
+  accent-color: #a00000;
   cursor: pointer;
 }
 
-#settingButtons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 28px;
-}
-
-.sbtn {
-  padding: 12px 20px;
-  background: #350606;
-  color: #fff;
-  border: 1px solid #a00;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.sbtn:hover {
-  background: #800;
-}
-
-#settingsHint {
-  margin-top: 15px;
-  text-align: center;
-  color: #888;
+.settingNote {
+  padding: 13px;
+  border: 1px solid #292323;
+  color: #777;
   font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 1px;
 }
 
-/* ================= MOBILE ================= */
+#warningTitle {
+  color: #df0000;
+  font-size: 28px;
+  text-shadow: 0 0 14px #590000;
+}
 
-@media (max-width: 700px) {
-  #mbox {
-    top: auto;
-    left: 50%;
-    bottom: 12%;
-    width: 250px;
-    transform: translateX(-50%);
+.warningText {
+  color: #ddd;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+#loading {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #aaa;
+  letter-spacing: 3px;
+}
+
+#loading.open {
+  display: flex;
+}
+
+.loadingContent {
+  padding: 25px;
+}
+
+.loadingContent p {
+  color: #a00000;
+}
+
+@media (max-height: 650px) {
+  #grannyWrap {
+    top: 7%;
+    height: 52vh;
   }
 
-  #mbox .mbtn {
-    width: 250px;
+  #menu {
+    bottom: 2%;
   }
 
-  #langsw {
-    margin-left: 45px;
+  .logo {
+    font-size: 30px;
+    margin-bottom: 4px;
   }
 
-  #gtitle {
-    top: 15px;
-    right: 15px;
-  }
-
-  #doorway {
-    width: 65vw;
-    height: 80%;
-  }
-
-  #stairs {
-    left: 5%;
-    width: 90%;
-  }
-
-  #hint {
-    font-size: 10px;
+  .menuButton {
+    padding: 4px;
+    margin: 2px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #bg, #monster, #head {
-    animation: none;
+  #grannyWrap,
+  #head,
+  .spotlight {
+    animation-duration: 12s;
   }
 }
 </style>
 </head>
 
 <body>
+
+<div id="scene">
+  <div class="wall"></div>
+  <div class="spotlight"></div>
+  <div class="lamp"></div>
+
+  <div class="stairs">
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+    <div class="railing left"></div>
+    <div class="railing right"></div>
+  </div>
+
+  <div class="grannyShadow"></div>
+
+  <div id="grannyWrap">
+    <svg id="granny" viewBox="0 0 300 440"
+         xmlns="http://www.w3.org/2000/svg">
+
+      <defs>
+        <linearGradient id="dress" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#3b3935"/>
+          <stop offset=".45" stop-color="#77716a"/>
+          <stop offset="1" stop-color="#242321"/>
+        </linearGradient>
+
+        <radialGradient id="skin">
+          <stop offset="0" stop-color="#d5c6ad"/>
+          <stop offset="1" stop-color="#777062"/>
+        </radialGradient>
+
+        <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#d9d3c5"/>
+          <stop offset="1" stop-color="#77736a"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Arms -->
+      <path d="M112 160 Q75 177 68 230 L48 285
+               Q43 300 55 304 Q68 307 75 290
+               L106 235 L137 193 Z"
+            fill="url(#skin)" stroke="#34312d" stroke-width="4"/>
+
+      <path d="M188 160 Q225 177 232 230 L252 285
+               Q257 300 245 304 Q232 307 225 290
+               L194 235 L163 193 Z"
+            fill="url(#skin)" stroke="#34312d" stroke-width="4"/>
+
+      <!-- Dress -->
+      <path d="M112 155 Q150 140 188 155
+               L211 248 L236 370
+               Q150 397 64 370 L89 248 Z"
+            fill="url(#dress)" stroke="#171615" stroke-width="6"/>
+
+      <path d="M112 180 L128 365 M150 165 L150 375 M188 180 L173 365"
+            fill="none" stroke="#171615" stroke-width="4" opacity=".65"/>
+
+      <!-- Neck -->
+      <path d="M130 125 L130 160 Q150 177 170 160 L170 125 Z"
+            fill="url(#skin)"/>
+
+      <!-- Hair behind head -->
+      <path d="M100 53 Q95 15 150 15
+               Q210 10 204 72 L194 132
+               L105 132 Z"
+            fill="url(#hair)" stroke="#37342e" stroke-width="4"/>
+
+      <!-- Head -->
+      <g id="head">
+        <path d="M111 47 Q150 26 189 47
+                 L185 103 Q178 136 150 145
+                 Q121 136 115 103 Z"
+              fill="url(#skin)" stroke="#454039" stroke-width="4"/>
+
+        <!-- Hairline -->
+        <path d="M108 65 Q104 28 150 29
+                 Q197 27 193 65
+                 L176 52 L161 62 L143 48 L126 64 Z"
+              fill="url(#hair)" stroke="#555047" stroke-width="3"/>
+
+        <!-- Eyes -->
+        <ellipse cx="134" cy="84" rx="10" ry="7" fill="#e4dfd2"/>
+        <ellipse cx="166" cy="84" rx="10" ry="7" fill="#e4dfd2"/>
+        <ellipse cx="136" cy="85" rx="4" ry="6" fill="#850000"/>
+        <ellipse cx="164" cy="85" rx="4" ry="6" fill="#850000"/>
+        <circle cx="137" cy="84" r="2" fill="#050505"/>
+        <circle cx="163" cy="84" r="2" fill="#050505"/>
+
+        <!-- Eyebrows -->
+        <path d="M121 73 L143 70 M157 70 L180 73"
+              stroke="#37332c" stroke-width="5" stroke-linecap="round"/>
+
+        <!-- Nose -->
+        <path d="M149 83 L142 104 L154 105"
+              fill="none" stroke="#5c5145" stroke-width="3"/>
+
+        <!-- Mouth -->
+        <path d="M131 119 Q150 107 169 119 Q151 137 131 119"
+              fill="#210707" stroke="#514039" stroke-width="3"/>
+        <path d="M137 117 L164 117"
+              stroke="#d9d1c4" stroke-width="4"/>
+
+        <!-- Hair sides -->
+        <path d="M113 45 Q95 66 108 123 L120 135 L117 82 Z"
+              fill="url(#hair)"/>
+        <path d="M188 45 Q205 65 192 123 L180 135 L184 82 Z"
+              fill="url(#hair)"/>
+
+        <!-- Wrinkles -->
+        <path d="M121 96 L131 99 M169 99 L180 96
+                 M133 128 L145 131 M155 131 L167 128"
+              stroke="#6b5e50" stroke-width="2" fill="none"/>
+      </g>
+
+      <!-- Hands -->
+      <path d="M47 281 L39 296 L48 306 L61 300 L62 287 Z"
+            fill="url(#skin)"/>
+      <path d="M253 281 L261 296 L252 306 L239 300 L238 287 Z"
+            fill="url(#skin)"/>
+
+      <!-- Dress hem -->
+      <path d="M64 370 Q150 388 236 370 L239 384
+               Q150 405 61 384 Z"
+            fill="#282622" stroke="#111" stroke-width="4"/>
+
+    </svg>
+  </div>
+
+  <div class="vignette"></div>
+</div>
+
+<button id="language">VI / EN</button>
+
 <div id="menu">
+  <h1 class="logo">GRANNY</h1>
+  <button class="menuButton" id="play">PLAY</button>
+  <button class="menuButton" id="settingsButton">SETTINGS</button>
+</div>
 
-  <!-- CẢNH KINH DỊ -->
-  <div id="bg">
-    <div id="stairs"></div>
-    <div id="rail"></div>
-
-    <div id="doorway">
-      <div id="lamp"></div>
-      <div id="spotlight"></div>
-
-      <!-- Granny SVG -->
-      <svg id="monster"
-        viewBox="0 0 200 420"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true">
-
-        <defs>
-          <linearGradient id="dress" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#56534c"/>
-            <stop offset=".5" stop-color="#c1beb4"/>
-            <stop offset="1" stop-color="#45423d"/>
-          </linearGradient>
-
-          <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#d4cbbb"/>
-            <stop offset="1" stop-color="#8e8578"/>
-          </linearGradient>
-        </defs>
-
-        <!-- Chân -->
-        <path d="M58 330 L53 393 L85 393 L92 330 Z" fill="#50473d"/>
-        <path d="M108 330 L117 393 L148 393 L139 330 Z" fill="#39332d"/>
-
-        <!-- Giày -->
-        <path d="M51 389 L84 389 L91 405 L45 405 Z" fill="#171311"/>
-        <path d="M116 389 L148 389 L158 405 L117 405 Z" fill="#171311"/>
-
-        <!-- Váy / thân -->
-        <path d="M72 118 L128 118 L143 250 L164 365 L30 365 L55 250 Z"
-          fill="url(#dress)" stroke="#302923" stroke-width="3"/>
-
-        <!-- Cổ -->
-        <path d="M88 105 L112 105 L114 133 L86 133 Z"
-          fill="url(#skin)"/>
-
-        <!-- Tay trái -->
-        <g id="leftArm">
-          <path d="M66 140 L48 218 L38 269"
-            fill="none" stroke="#b3a794" stroke-width="17"
-            stroke-linecap="round"/>
-          <path d="M38 269 L31 288"
-            fill="none" stroke="#b3a794" stroke-width="13"
-            stroke-linecap="round"/>
-          <path d="M31 288 L22 297 M31 288 L36 301 M31 288 L28 305"
-            stroke="#b3a794" stroke-width="5" stroke-linecap="round"/>
-        </g>
-
-        <!-- Tay phải -->
-        <g id="rightArm">
-          <path d="M134 140 L151 216 L157 270"
-            fill="none" stroke="#b3a794" stroke-width="17"
-            stroke-linecap="round"/>
-          <path d="M157 270 L164 288"
-            fill="none" stroke="#b3a794" stroke-width="13"
-            stroke-linecap="round"/>
-          <path d="M164 288 L172 297 M164 288 L159 301 M164 288 L168 305"
-            stroke="#b3a794" stroke-width="5" stroke-linecap="round"/>
-        </g>
-
-        <!-- Đầu và mặt -->
-        <g id="head">
-          <path d="M72 66 Q69 37 100 34 Q131 37 128 66 L125 101 Q118 124 100 126 Q81 122 75 101 Z"
-            fill="url(#skin)" stroke="#4a4037" stroke-width="2"/>
-
-          <!-- Tóc -->
-          <path d="M71 78 Q62 43 85 28 Q105 15 126 34 Q142 48 128 80
-                   L120 58 Q101 48 82 62 L77 91 Z"
-            fill="#77736b"/>
-
-          <path d="M76 58 Q98 43 124 59"
-            fill="none" stroke="#a7a198" stroke-width="5"/>
-
-          <!-- Lông mày -->
-          <path d="M80 74 L95 78 M105 78 L120 74"
-            stroke="#494038" stroke-width="5" stroke-linecap="round"/>
-
-          <!-- Mắt -->
-          <ellipse cx="89" cy="84" rx="8" ry="7" fill="#f5eee0"/>
-          <ellipse cx="111" cy="84" rx="8" ry="7" fill="#f5eee0"/>
-          <circle cx="90" cy="84" r="4" fill="#a00000"/>
-          <circle cx="110" cy="84" r="4" fill="#a00000"/>
-          <circle cx="91" cy="83" r="1.5" fill="#000"/>
-          <circle cx="111" cy="83" r="1.5" fill="#000"/>
-
-          <!-- Mũi -->
-          <path d="M100 85 L95 101 L104 101"
-            fill="none" stroke="#78675a" stroke-width="3"/>
-
-          <!-- Miệng -->
-          <path d="M84 108 Q100 117 116 107 Q100 126 84 108"
-            fill="#280707" stroke="#4a1717" stroke-width="2"/>
-
-          <path d="M91 112 L96 115 L101 112 L106 115 L110 111"
-            fill="none" stroke="#e6d7c5" stroke-width="2"/>
-        </g>
-
-        <!-- Vết bẩn trên váy -->
-        <path d="M62 220 L74 232 M124 254 L135 267 M67 292 L78 300"
-          stroke="#2a1712" stroke-width="5" opacity=".8"/>
-
-        <!-- Bóng dưới chân -->
-        <ellipse cx="100" cy="407" rx="65" ry="8"
-          fill="#000" opacity=".8"/>
-      </svg>
-    </div>
-
-    <div id="shade"></div>
+<!-- MODE PANEL -->
+<div class="panel" id="modePanel">
+  <div class="panelBox">
+    <h2>SELECT MODE</h2>
+    <button class="modeButton" id="normalButton">NORMAL</button>
+    <button class="modeButton" id="nightmareButton">NIGHTMARE</button>
+    <button class="backButton" data-close="modePanel">BACK</button>
   </div>
+</div>
 
-  <!-- MENU CHÍNH -->
-  <div id="gtitle"></div>
-
-  <div id="mbox">
-    <button class="mbtn" id="play">PLAY</button>
-    <div id="cont"></div>
-    <button class="mbtn" id="neu">GAME MỚI</button>
-    <button class="mbtn" id="set">CÀI ĐẶT</button>
-
-    <div id="langsw" role="button" tabindex="0" aria-label="Language">
-      <div class="l" id="lv">★</div>
-      <div class="l" id="le">EN</div>
-      <div id="knob"></div>
-    </div>
-  </div>
-
-  <div id="hint"></div>
-
-  <!-- CHỌN CHẾ ĐỘ -->
-  <div id="modePanel">
-    <h2 id="modeTitle">CHỌN CHẾ ĐỘ</h2>
-    <button class="modeBtn" id="normalMode">NORMAL</button>
-    <button class="modeBtn" id="nightmareMode">NIGHTMARE</button>
-    <button class="modeBtn" id="backMode">QUAY LẠI</button>
-  </div>
-
-  <!-- CẢNH BÁO NIGHTMARE -->
-  <div id="warning">
-    <h2>
-      GRANNY ĐI NHANH HƠN!!!<br>
-      PIN HẾT NHANH HƠN<br>
-      GRANNY ONE HIT ONE KILL!!!
-    </h2>
-    <button class="modeBtn" id="confirmNightmare">TIẾP TỤC</button>
-    <button class="modeBtn" id="cancelNightmare">QUAY LẠI</button>
-  </div>
-
-  <!-- CÀI ĐẶT -->
-
-<div id="setp">
-  <div id="setbox">
+<!-- SETTINGS PANEL -->
+<div class="panel" id="settingsPanel">
+  <div class="panelBox">
     <h2>SETTINGS</h2>
 
     <div class="settingRow">
       <div class="settingTitle">
         <span>VOLUME</span>
-        <b id="volumeValue">MAX</b>
+        <b id="volumeValue">100%</b>
       </div>
+
       <input
         type="range"
         id="volumeSlider"
         min="0"
         max="100"
+        step="1"
         value="100"
         aria-label="Volume"
       >
@@ -769,329 +630,98 @@ button {
     <div class="settingRow">
       <div class="settingTitle">
         <span>GRAPHICS</span>
-        <b id="graphicsValue">MAX</b>
+        <b>DEFAULT</b>
       </div>
-      <input
-        type="range"
-        id="graphicsSlider"
-        min="1"
-        max="3"
-        value="3"
-        step="1"
-        aria-label="Graphics quality"
-      >
+
+      <div class="settingNote">
+        GRAPHICS SETTINGS UNAVAILABLE<br>
+        GAME USES DEFAULT GRAPHICS
+      </div>
     </div>
 
-    <div id="settingButtons">
-      <button class="sbtn" id="maxSettings">MAX ALL</button>
-      <button class="sbtn" id="closeSettings">BACK</button>
-    </div>
-
-    <div id="settingsHint">
-      GRAPHICS: LOW / MEDIUM / HIGH
-    </div>
+    <button class="backButton" data-close="settingsPanel">BACK</button>
   </div>
 </div>
 
+<!-- NIGHTMARE WARNING -->
+<div class="panel" id="warningPanel">
+  <div class="panelBox">
+    <h2 id="warningTitle">WARNING!</h2>
+
+    <p class="warningText">GRANNY ĐI NHANH HƠN!!!</p>
+    <p class="warningText">PIN HẾT NHANH HƠN</p>
+    <p class="warningText">GRANNY ONE HIT ONE KILL!!!</p>
+
+    <button class="modeButton" id="continueNightmare">
+      CONTINUE
+    </button>
+
+    <button class="backButton" data-close="warningPanel">
+      BACK
+    </button>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="loadingContent">
+    <h2>GRANNY</h2>
+    <p>ENTERING THE HOUSE...</p>
+  </div>
+</div>
 
 <script>
+"use strict";
+
 const $ = id => document.getElementById(id);
 
-const save = (key, value) => {
-  try {
-    localStorage.setItem(key, value);
-  } catch (e) {}
-};
-
-const GAME_URL = 'index.html';
-
-let day = 1;
-let lang = 'vi';
-
-const DEF = {
-  vol: 70,
-  sens: 100,
-  bri: 100,
-  fov: 75,
-  shake: true
-};
-
-let S = { ...DEF };
-
-try {
-  day = +localStorage.getItem('gh_day') || 1;
-  lang = localStorage.getItem('gh_lang') || 'vi';
-  Object.assign(S, JSON.parse(localStorage.getItem('gh_set') || '{}'));
-} catch (e) {}
-
-const TX = {
-  vi: {
-    title: 'NGÀY {d}???',
-    play: 'PLAY',
-    cont: 'Tiếp tục · Ngày {d}',
-    neu: 'GAME MỚI',
-    set: 'CÀI ĐẶT',
-    vol: 'Âm lượng',
-    sens: 'Độ nhạy chuột',
-    bri: 'Độ sáng môi trường',
-    fov: 'Tầm nhìn (FOV)',
-    shake: 'Rung màn hình khi quái ở gần',
-    back: 'XONG',
-    reset: 'Mặc định',
-    hint: 'W A S D di chuyển | Chuột nhìn | Shift chạy | F đèn pin | E tương tác',
-    mode: 'CHỌN CHẾ ĐỘ',
-    backMode: 'QUAY LẠI',
-    confirm: 'TIẾP TỤC',
-    cancel: 'QUAY LẠI'
-  },
-
-  en: {
-    title: 'DAY {d}???',
-    play: 'PLAY',
-    cont: 'Continue · Day {d}',
-    neu: 'NEW GAME',
-    set: 'SETTINGS',
-    vol: 'Volume',
-    sens: 'Mouse sensitivity',
-    bri: 'Ambient brightness',
-    fov: 'Field of view',
-    shake: 'Screen shake near monster',
-    back: 'DONE',
-    reset: 'Default',
-    hint: 'W A S D move | Mouse look | Shift run | F flashlight | E interact',
-    mode: 'SELECT MODE',
-    backMode: 'BACK',
-    confirm: 'CONTINUE',
-    cancel: 'BACK'
-  }
-};
-
-const tr = key => TX[lang][key];
-
-const ROWS = [
-  ['vol', 0, 100, '%'],
-  ['sens', 20, 300, '%'],
-  ['bri', 25, 400, '%'],
-  ['fov', 60, 100, '°']
-];
-
-$('setrows').innerHTML = ROWS.map(([id, min, max]) => `
-  <label>
-    <span>
-      <span id="l_${id}"></span>
-      <b id="v_${id}"></b>
-    </span>
-    <input type="range" id="i_${id}" min="${min}" max="${max}">
-  </label>
-`).join('') + `
-  <label class="chk">
-    <input type="checkbox" id="i_shake">
-    <span id="l_shake"></span>
-  </label>
-`;
-
-ROWS.forEach(([id]) => {
-  $('i_' + id).oninput = event => {
-    S[id] = +event.target.value;
-    render();
-  };
-});
-
-$('i_shake').onchange = event => {
-  S.shake = event.target.checked;
-  render();
-};
-
-function render() {
-  document.documentElement.lang = lang;
-
-  $('gtitle').innerText = tr('title').replace('{d}', day);
-  $('play').innerText = tr('play');
-  $('cont').innerText = tr('cont').replace('{d}', day);
-  $('neu').innerText = tr('neu');
-  $('set').innerText = tr('set');
-  $('hint').innerText = tr('hint');
-
-  $('langsw').className = lang;
-
-  $('modeTitle').innerText = tr('mode');
-  $('backMode').innerText = tr('backMode');
-  $('confirmNightmare').innerText = tr('confirm');
-  $('cancelNightmare').innerText = tr('cancel');
-
-  ROWS.forEach(([id, , , unit]) => {
-    $('i_' + id).value = S[id];
-    $('v_' + id).innerText = S[id] + unit;
-    $('l_' + id).innerText = tr(id);
-  });
-
-  $('i_shake').checked = S.shake;
-  $('l_shake').innerText = tr('shake');
-
-  $('settitle').innerText = tr('set');
-  $('setback').innerText = tr('back');
-  $('setreset').innerText = tr('reset');
-
-  save('gh_set', JSON.stringify(S));
-}
-
-/* ================= HORROR AMBIENCE ================= */
-
-/*
-  Trình duyệt thường chặn âm thanh tự phát trước khi
-  người chơi tương tác. Âm thanh bắt đầu sau lần nhấn đầu.
-*/
-
+let currentLanguage = "en";
 let audioContext = null;
-let audioStarted = false;
 let masterGain = null;
+let audioStarted = false;
 
-function startHorrorMusic() {
-  if (audioStarted) {
-    if (audioContext && audioContext.state === 'suspended') {
-      audioContext.resume();
+function openPanel(id) {
+  $(id).classList.add("open");
+}
+
+function closePanel(id) {
+  $(id).classList.remove("open");
+}
+
+function closeAllPanels() {
+  document.querySelectorAll(".panel").forEach(panel => {
+    panel.classList.remove("open");
+  });
+}
+
+/* VOLUME */
+
+const volumeSlider = $("volumeSlider");
+const volumeValue = $("volumeValue");
+
+function loadVolume() {
+  let volume = 100;
+
+  try {
+    const saved = localStorage.getItem("gh_volume");
+    if (saved !== null) {
+      volume = Math.max(0, Math.min(100, Number(saved)));
     }
-    return;
-  }
+  } catch (error) {}
 
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) return;
-
-  try {
-    audioContext = new AudioCtx();
-    masterGain = audioContext.createGain();
-    masterGain.gain.value = Math.max(0, S.vol / 100) * 0.12;
-    masterGain.connect(audioContext.destination);
-
-    const frequencies = [43, 44.5, 65.4];
-
-    frequencies.forEach((frequency, index) => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-
-      oscillator.type = index === 1 ? 'triangle' : 'sine';
-      oscillator.frequency.value = frequency;
-      gain.gain.value = index === 0 ? 0.55 : 0.18;
-
-      oscillator.connect(gain);
-      gain.connect(masterGain);
-      oscillator.start();
-    });
-
-    audioStarted = true;
-  } catch (e) {
-    // Nếu thiết bị không hỗ trợ âm thanh, menu vẫn hoạt động.
-  }
+  volumeSlider.value = volume;
+  updateVolume();
 }
 
-document.addEventListener('pointerdown', startHorrorMusic, {
-  once: true
-});
-
-document.addEventListener('keydown', startHorrorMusic, {
-  once: true
-});
-
-/* ================= GAME MODE ================= */
-
-function go(mode = 'normal', newGame = false) {
-  try {
-    sessionStorage.setItem('gh_menu', '1');
-    sessionStorage.setItem('gh_mode', mode);
-
-    if (newGame) {
-      localStorage.setItem('gh_day', '1');
-    }
-  } catch (e) {}
-
-  location.href = GAME_URL;
-}
-
-/* PLAY mở lựa chọn chế độ */
-
-$('play').onclick = () => {
-  $('modePanel').classList.add('on');
-};
-
-/* GAME MỚI cũng mở lựa chọn chế độ */
-
-$('neu').onclick = () => {
-  $('modePanel').classList.add('on');
-};
-
-/* Quay lại menu chính */
-
-$('backMode').onclick = () => {
-  $('modePanel').classList.remove('on');
-};
-
-/* NORMAL: vào game bình thường */
-
-$('normalMode').onclick = () => {
-  go('normal', true);
-};
-
-/* NIGHTMARE: hiện bảng cảnh báo trước */
-
-$('nightmareMode').onclick = () => {
-  $('modePanel').classList.remove('on');
-  $('warning').classList.add('on');
-};
-
-/* Xác nhận NIGHTMARE */
-
-$('confirmNightmare').onclick = () => {
-  go('nightmare', true);
-};
-
-/* Hủy NIGHTMARE, trở lại lựa chọn chế độ */
-
-$('cancelNightmare').onclick = () => {
-  $('warning').classList.remove('on');
-  $('modePanel').classList.add('on');
-};
-
-/* ================= SETTINGS ================= */
-
-
-/* ================= SETTINGS ================= */
-
-const volumeSlider = $('volumeSlider');
-const graphicsSlider = $('graphicsSlider');
-
-function loadSettings() {
-  try {
-    const volume = localStorage.getItem('gh_volume');
-    const graphics = localStorage.getItem('gh_graphics');
-
-    if (volume !== null) volumeSlider.value = volume;
-    if (graphics !== null) graphicsSlider.value = graphics;
-  } catch (e) {}
-
-  updateSettings();
-}
-
-function updateSettings() {
+function updateVolume() {
   const volume = Number(volumeSlider.value);
-  const graphics = Number(graphicsSlider.value);
 
-  $('volumeValue').innerText =
-    volume === 100 ? 'MAX' : volume + '%';
-
-  $('graphicsValue').innerText =
-    graphics === 3
-      ? 'HIGH / MAX'
-      : graphics === 2
-        ? 'MEDIUM'
-        : 'LOW';
+  volumeValue.textContent = volume + "%";
 
   try {
-    localStorage.setItem('gh_volume', volume);
-    localStorage.setItem('gh_graphics', graphics);
-  } catch (e) {}
+    localStorage.setItem("gh_volume", volume);
+  } catch (error) {}
 
-  // Điều chỉnh âm lượng nhạc menu nếu Web Audio đang chạy.
-  if (typeof masterGain !== 'undefined' && masterGain && audioContext) {
+  if (masterGain && audioContext) {
     masterGain.gain.setTargetAtTime(
       volume / 100 * 0.12,
       audioContext.currentTime,
@@ -1100,46 +730,164 @@ function updateSettings() {
   }
 }
 
-volumeSlider.addEventListener('input', updateSettings);
-graphicsSlider.addEventListener('input', updateSettings);
+volumeSlider.addEventListener("input", updateVolume);
 
-$('set').onclick = () => {
-  $('setp').classList.add('on');
-};
+/* HORROR AMBIENCE
+   Audio starts after the player interacts with the page. */
 
-$('closeSettings').onclick = () => {
-  $('setp').classList.remove('on');
-};
-
-$('maxSettings').onclick = () => {
-  volumeSlider.value = 100;
-  graphicsSlider.value = 3;
-  updateSettings();
-};
-
-loadSettings();
-
-
-/* ================= LANGUAGE ================= */
-
-const toggleLang = () => {
-  lang = lang === 'vi' ? 'en' : 'vi';
-  save('gh_lang', lang);
-  render();
-};
-
-$('langsw').onclick = toggleLang;
-
-$('langsw').onkeydown = event => {
-  if (event.code === 'Enter' || event.code === 'Space') {
-    event.preventDefault();
-    toggleLang();
+function startHorrorAudio() {
+  if (audioStarted) {
+    if (audioContext && audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+    return;
   }
-};
 
-/* Khởi tạo menu */
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
 
-render();
+  if (!AudioContextClass) return;
+
+  try {
+    audioContext = new AudioContextClass();
+    masterGain = audioContext.createGain();
+
+    const volume = Number(volumeSlider.value) / 100;
+    masterGain.gain.value = volume * 0.12;
+    masterGain.connect(audioContext.destination);
+
+    const osc1 = audioContext.createOscillator();
+    const osc2 = audioContext.createOscillator();
+    const gain1 = audioContext.createGain();
+    const gain2 = audioContext.createGain();
+
+    osc1.type = "sine";
+    osc2.type = "triangle";
+
+    osc1.frequency.value = 48;
+    osc2.frequency.value = 51;
+
+    gain1.gain.value = 0.65;
+    gain2.gain.value = 0.2;
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+
+    gain1.connect(masterGain);
+    gain2.connect(masterGain);
+
+    osc1.start();
+    osc2.start();
+
+    const lfo = audioContext.createOscillator();
+    const lfoGain = audioContext.createGain();
+
+    lfo.frequency.value = 0.12;
+    lfoGain.gain.value = 8;
+
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc2.frequency);
+    lfo.start();
+
+    audioStarted = true;
+
+    audioContext.resume().catch(() => {});
+  } catch (error) {
+    console.warn("Audio could not start:", error);
+  }
+}
+
+document.addEventListener("pointerdown", startHorrorAudio, {
+  once: true
+});
+
+document.addEventListener("keydown", startHorrorAudio, {
+  once: true
+});
+
+/* MENU BUTTONS */
+
+$("play").addEventListener("click", () => {
+  startHorrorAudio();
+  openPanel("modePanel");
+});
+
+$("settingsButton").addEventListener("click", () => {
+  startHorrorAudio();
+  openPanel("settingsPanel");
+});
+
+document.querySelectorAll("[data-close]").forEach(button => {
+  button.addEventListener("click", () => {
+    closePanel(button.dataset.close);
+  });
+});
+
+/* START GAME */
+
+function startGame(mode) {
+  try {
+    sessionStorage.setItem("gh_mode", mode);
+    sessionStorage.setItem("gh_menu", "1");
+  } catch (error) {}
+
+  closeAllPanels();
+  $("loading").classList.add("open");
+
+  /*
+    The game file must be named index.html
+    and be in the same folder as this menu file.
+  */
+  window.location.href = "index.html";
+}
+
+$("normalButton").addEventListener("click", () => {
+  startGame("normal");
+});
+
+$("nightmareButton").addEventListener("click", () => {
+  openPanel("warningPanel");
+});
+
+$("continueNightmare").addEventListener("click", () => {
+  startGame("nightmare");
+});
+
+/* LANGUAGE BUTTON */
+
+$("language").addEventListener("click", () => {
+  currentLanguage = currentLanguage === "en" ? "vi" : "en";
+
+  if (currentLanguage === "vi") {
+    $("play").textContent = "CHƠI";
+    $("settingsButton").textContent = "CÀI ĐẶT";
+    $("normalButton").textContent = "BÌNH THƯỜNG";
+    $("nightmareButton").textContent = "ÁC MỘNG";
+    $("warningTitle").textContent = "CẢNH BÁO!";
+    $("continueNightmare").textContent = "TIẾP TỤC";
+    $("volumeValue").setAttribute("aria-label", "Âm lượng");
+  } else {
+    $("play").textContent = "PLAY";
+    $("settingsButton").textContent = "SETTINGS";
+    $("normalButton").textContent = "NORMAL";
+    $("nightmareButton").textContent = "NIGHTMARE";
+    $("warningTitle").textContent = "WARNING!";
+    $("continueNightmare").textContent = "CONTINUE";
+  }
+});
+
+/* ESCAPE KEY */
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeAllPanels();
+  }
+});
+
+/* INITIALIZE */
+
+loadVolume();
 </script>
+
 </body>
 </html>
