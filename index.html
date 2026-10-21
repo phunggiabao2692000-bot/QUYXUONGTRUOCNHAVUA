@@ -875,8 +875,6 @@ function grannyFig(par, y0, x, z, ry, sc) {   // bà già lưng còng, cầm g�
   const V = function (a) { return a.map(function (q) { return new THREE.Vector2(q[0], q[1]); }); };
   const gait = { legs: [], arms: [] };
 
-// Hai chân có khớp xoay riêng
-const gait = { legs: [], arms: [] };
 
 [-1, 1].forEach(function (s) {
   const hip = new THREE.Group();
@@ -990,10 +988,10 @@ return g;
 
   // Hai chân bước lệch pha, đứng dạng chân
   GRANNY_ANIM.legs.forEach(function (leg) {
-    leg.node.rotation.x =
+    leg.hip.rotation.x =
       moving ? Math.sin(grannyPhase + (leg.side < 0 ? 0 : Math.PI)) * 0.42 : twitch;
 
-    leg.node.rotation.z =
+    leg.hip.rotation.z =
       leg.side * 0.22 + (moving ? swing * 0.08 : 0);
   });
 
@@ -1447,7 +1445,7 @@ const HATCH = { x: 3.8, z: 26, open: false, t: 0, lid: new THREE.Group() };
   [0.3, 1.7].forEach(function (zz) { box(HATCH.lid, 0, 0.06, zz, 2.0, 0.04, 0.12, MT.met); });
 })();
 [23.4, 28.6].forEach(function (zz) { put(U, UY, 0.85, zz, 0, P.nstand()); put(U, UY + 1.06, 0.85, zz, 0, P.lamp()); });
-put(U, UY, 3, 33.15, Math.PI, P.wardrobe(3.4));
+const tunWard =put(U, UY, 3, 33.15, Math.PI, P.wardrobe(3.4));
 put(U, UY, 9, 33.1, Math.PI, P.dresser());
 put(U, UY, 12.8, 26, -Math.PI / 2, P.sofa(2.6, 'red'));
 put(U, UY, 12.8, 31.5, 0, P.floorlamp());
@@ -1540,7 +1538,7 @@ const FC = [];
 COLL.forEach(function (g) {
   if (g === granny) return;
   const bb = new THREE.Box3().setFromObject(g), base = bb.min.y > 5 ? F2 : 0;
-  if (bb.min.y - base > 0.5 || bb.max.y - bb.min.y < 0.8) return;   // đồ đặt trên bàn / quá thấp thì bỏ qua
+  if (bb.min.y < -3 || bb.min.y - base > 0.5 || bb.max.y - bb.min.y < 0.8) return;   // bỏ đồ trong hầm / đặt trên bàn / quá thấp
   FC.push({ g: g, lvl: base ? 'U' : 'G', x1: bb.min.x, x2: bb.max.x, z1: bb.min.z, z2: bb.max.z });
 });
 WCOL.forEach(function (r) { r.w = true; });
@@ -1760,7 +1758,7 @@ function spotRect(g, type, name) {
   const bb = new THREE.Box3().setFromObject(g), base = bb.min.y > 5 ? F2 : 0;
   return { type: type, name: name, g: g, lvl: base ? 'U' : 'G', base: base, x1: bb.min.x, x2: bb.max.x, z1: bb.min.z, z2: bb.max.z, cx: (bb.min.x + bb.max.x) / 2, cz: (bb.min.z + bb.max.z) / 2, items: [], done: false, reach: false, secret: false, ry: 0, fixed: false };
 }
-SPOTS.forEach(function (o) { if (o.g !== secretShelf && o.g !== exitCab) SP.push(spotRect(o.g, 'search', o.name)); });
+SPOTS.forEach(function (o) { if (o.g !== secretShelf && o.g !== exitCab&& o.g !== tunWard) SP.push(spotRect(o.g, 'search', o.name)); });
 HIDE.forEach(function (o) { const r = spotRect(o.g, 'hide', o.name); r.ry = o.ry; SP.push(r); });
 if (FR) { const r = spotRect(FR.g, 'fridge', 'tủ lạnh'); r.items = [{ id: 'kho' }]; r.fixed = true; SP.push(r); }
 const KHOCAB = spotRect(exitCab, 'tunB', 'tủ');
@@ -1985,7 +1983,6 @@ function applyLook() {
   });
 
   dust.visible = underground;
-}
 }
 function setUnderground(f) { underground = f; applyLook(); }
 
