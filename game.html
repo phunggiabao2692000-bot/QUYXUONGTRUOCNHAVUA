@@ -52,12 +52,7 @@ body.chase #vig{box-shadow:inset 0 0 220px rgba(210,0,0,.6)}
 <div id="end"></div>
 <div id="vig"></div><div id="flash"></div><div id="hide"></div><div id="day"></div>
 <div id="dark"></div><div id="fade"></div><div id="glitch"></div><div id="thought"></div><div id="lid"><i></i><i></i></div><div id="story"></div>
-<div id="info">
-  <div><b>Nhà kinh dị</b> &nbsp; Góc nhìn: <span id="mode"></span> (<kbd>V</kbd> đổi)</div>
-  <div id="st">Đang chờ...</div>
-  <div style="display:none">Xem: <span id="fl"></span></div>
-  <div id="help"></div>
-</div>
+
 <script>
 var $ = function (i) { return document.getElementById(i); };
 function st(t) { $('st').textContent = t; }
@@ -2006,12 +2001,16 @@ function thoughtUpdate(dt) {
   else if (thoughtQ.length) { const el = $('thought'); el.textContent = thoughtQ.shift(); el.style.display = 'block'; thoughtT = 3.6; }
 }
 function hud() {
-  $('hud').innerHTML = '📅 Ngày ' + Math.min(day, 5) + '/5 &nbsp; ❤️ ' + Math.max(0, hp) + '%<br>' +
-    (hasKey ? '🔑 Chìa khóa cửa chính: <b style="color:#ffd700">đã có</b>' : '🔑 Chìa khóa cửa chính: chưa có') + '<br>' +
-    (hasPad ? '🔓 Chìa khóa khóa móc: <b style="color:#ffd700">đã có</b>' : '🔓 Chìa khóa khóa móc: chưa có') + '<br>' +
-    (hasKho ? '🗝️ Chìa khóa kho: <b style="color:#ffd700">đã có</b>' : '🗝️ Chìa khóa kho: chưa có') + '<br>' +
-    '🔋 Pin: ' + bats + '/4<br>🔦 Đèn pin: ' + Math.round(charge) + '% <kbd>F</kbd>' +
-    (legs ? '<br>🦴 Chân gãy ×' + legs + ' (tốc độ ' + Math.round(spdMul() * 100) + '%)' : '');
+  $('hud').innerHTML =
+    '📅 Ngày ' + Math.min(day, 5) +
+    '/5 &nbsp; ❤️ ' + Math.max(0, hp) + '%' +
+    '<br>🔋 Pin: ' + bats + '/4' +
+    '<br>🔦 Đèn pin: ' + Math.round(charge) +
+    '% <kbd>F</kbd>' +
+    (legs
+      ? '<br>🦴 Chân gãy ×' + legs +
+        ' (tốc độ ' + Math.round(spdMul() * 100) + '%)'
+      : '');
 }
 function facing(cx, cz, d, thr) { if (d < 1.0) return true; const L = Math.hypot(cx - PL.x, cz - PL.z) || 1; return (-Math.sin(yaw) * (cx - PL.x) - Math.cos(yaw) * (cz - PL.z)) / L > (thr || 0.25); }
 const RAILS = [{ ax: 'x', f: CX - HH, a: HZ, b: D, dx: 1, dz: 0 }, { ax: 'x', f: CX + HH, a: HZ, b: D, dx: -1, dz: 0 }, { ax: 'z', f: HZ, a: CX - IN, b: CX + IN, dx: 0, dz: 1 }];
