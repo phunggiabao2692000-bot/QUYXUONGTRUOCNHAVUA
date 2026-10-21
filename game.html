@@ -1535,10 +1535,15 @@ key.position.set(KEY[0], 1.35, KEY[1]); key.rotation.x = Math.PI / 2; G.add(key)
 const batM = [];
 BAT.forEach(function (b) { const m = box(b[2] ? U : G, b[0], b[2] + 1.0, b[1], 0.6, 1.0, 0.6, new THREE.MeshBasicMaterial({ color: 0x44ff77 })); m.userData = { x: b[0], z: b[1], y: b[2] }; batM.push(m); });
 
-function showFloors(n) { G.visible = n !== 2; U.visible = n !== 1; $('fl').textContent = ['', 'TẦNG TRỆT', 'TẦNG LẦU', 'CẢ HAI'][n]; }
-showFloors(3);
-let labelsOn = true, bright = true;
+function showFloors(n) {
+  G.visible = n !== 2;
+  U.visible = n !== 1;
 
+  const fl = $('fl');
+  if (fl) {
+    fl.textContent = ['', 'TẦNG TRỆT', 'TẦNG LẦU', 'CẢ HAI'][n];
+  }
+}
 // ===== VA CHẠM (tường + đồ đạc) =====
 scene.updateMatrixWorld(true);
 const FC = [];
