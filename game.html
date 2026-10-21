@@ -52,10 +52,15 @@ body.chase #vig{box-shadow:inset 0 0 220px rgba(210,0,0,.6)}
 <div id="end"></div>
 <div id="vig"></div><div id="flash"></div><div id="hide"></div><div id="day"></div>
 <div id="dark"></div><div id="fade"></div><div id="glitch"></div><div id="thought"></div><div id="lid"><i></i><i></i></div><div id="story"></div>
-
+<div id="info">
+  <div><b>Nhà kinh dị</b> &nbsp; Góc nhìn: <span id="mode"></span> (<kbd>V</kbd> đổi)</div>
+  <div id="st">Đang chờ...</div>
+  <div style="display:none">Xem: <span id="fl"></span></div>
+  <div id="help"></div>
+</div>
 <script>
 var $ = function (i) { return document.getElementById(i); };
-function st(t) {}
+function st(t) { $('st').textContent = t; }
 function showErr(m) { var b = $('err'); b.textContent = m; b.style.display = 'block'; }
 addEventListener('error', function (e) { showErr('Lỗi: ' + e.message + ' (dòng ' + e.lineno + ')'); });
 st('1. Trang đã chạy, đang kiểm tra thư viện 3D...');
@@ -1535,15 +1540,10 @@ key.position.set(KEY[0], 1.35, KEY[1]); key.rotation.x = Math.PI / 2; G.add(key)
 const batM = [];
 BAT.forEach(function (b) { const m = box(b[2] ? U : G, b[0], b[2] + 1.0, b[1], 0.6, 1.0, 0.6, new THREE.MeshBasicMaterial({ color: 0x44ff77 })); m.userData = { x: b[0], z: b[1], y: b[2] }; batM.push(m); });
 
-function showFloors(n) {
-  G.visible = n !== 2;
-  U.visible = n !== 1;
+function showFloors(n) { G.visible = n !== 2; U.visible = n !== 1; $('fl').textContent = ['', 'TẦNG TRỆT', 'TẦNG LẦU', 'CẢ HAI'][n]; }
+showFloors(3);
+let labelsOn = true, bright = true;
 
-  const fl = $('fl');
-  if (fl) {
-    fl.textContent = ['', 'TẦNG TRỆT', 'TẦNG LẦU', 'CẢ HAI'][n];
-  }
-}
 // ===== VA CHẠM (tường + đồ đạc) =====
 scene.updateMatrixWorld(true);
 const FC = [];
@@ -1879,14 +1879,7 @@ function hitPlayer(force) {
   $('flash').style.opacity = 1; setTimeout(function () { $('flash').style.opacity = 0; }, 150); snd(60, 0.35, 'square', 0.3);
   if (hp <= 0) caught(); else { say('Granny đánh trúng bạn! Chạy đi!'); hud(); }
 }
-function banner(t, ms) {
-  const b = $('day');
-  if (!b) return;
-
-  b.textContent = t;
-  b.style.display = 'flex';
-  freeze = ms / 1000;
-}
+function banner(t, ms) { const b = $('day'); b.textContent = t; b.style.display = 'flex'; freeze = ms / 1000; }
 function caught() {
   day++; document.body.classList.remove('chase');
   if (day > 5) {
@@ -2012,20 +2005,14 @@ function thoughtUpdate(dt) {
   if (thoughtT > 0) { thoughtT -= dt; if (thoughtT <= 0) $('thought').style.display = 'none'; }
   else if (thoughtQ.length) { const el = $('thought'); el.textContent = thoughtQ.shift(); el.style.display = 'block'; thoughtT = 3.6; }
 }
-
 function hud() {
-  $('hud').innerHTML =
-    '📅 Ngày ' + Math.min(day, 5) +
-    '/5 &nbsp; ❤️ ' + Math.max(0, hp) + '%' +
-    '<br>🔋 Pin: ' + bats + '/4' +
-    '<br>🔦 Đèn pin: ' + Math.round(charge) +
-    '% <kbd>F</kbd>' +
-    (legs
-      ? '<br>🦴 Chân gãy ×' + legs +
-        ' (tốc độ ' + Math.round(spdMul() * 100) + '%)'
-      : '');
+  $('hud').innerHTML = '📅 Ngày ' + Math.min(day, 5) + '/5 &nbsp; ❤️ ' + Math.max(0, hp) + '%<br>' +
+    (hasKey ? '🔑 Chìa khóa cửa chính: <b style="color:#ffd700">đã có</b>' : '🔑 Chìa khóa cửa chính: chưa có') + '<br>' +
+    (hasPad ? '🔓 Chìa khóa khóa móc: <b style="color:#ffd700">đã có</b>' : '🔓 Chìa khóa khóa móc: chưa có') + '<br>' +
+    (hasKho ? '🗝️ Chìa khóa kho: <b style="color:#ffd700">đã có</b>' : '🗝️ Chìa khóa kho: chưa có') + '<br>' +
+    '🔋 Pin: ' + bats + '/4<br>🔦 Đèn pin: ' + Math.round(charge) + '% <kbd>F</kbd>' +
+    (legs ? '<br>🦴 Chân gãy ×' + legs + ' (tốc độ ' + Math.round(spdMul() * 100) + '%)' : '');
 }
-
 function facing(cx, cz, d, thr) { if (d < 1.0) return true; const L = Math.hypot(cx - PL.x, cz - PL.z) || 1; return (-Math.sin(yaw) * (cx - PL.x) - Math.cos(yaw) * (cz - PL.z)) / L > (thr || 0.25); }
 const RAILS = [{ ax: 'x', f: CX - HH, a: HZ, b: D, dx: 1, dz: 0 }, { ax: 'x', f: CX + HH, a: HZ, b: D, dx: -1, dz: 0 }, { ax: 'z', f: HZ, a: CX - IN, b: CX + IN, dx: 0, dz: 1 }];
 function railNear() {   // đang đứng sát lan can nhìn xuống sảnh?
