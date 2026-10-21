@@ -30,7 +30,19 @@ body.chase #vig{box-shadow:inset 0 0 220px rgba(210,0,0,.6)}
 #day{display:none;position:fixed;inset:0;z-index:15;background:#000;color:#ddd;align-items:center;justify-content:center;font-size:52px;font-weight:700;text-align:center}
 #end{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:20;align-items:center;justify-content:center;text-align:center;font-size:42px;font-weight:700;color:#9f9}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  var ok = false, mode = 'normal', vol = 100;
+  try {
+    ok = sessionStorage.getItem('gh_menu') === '1';
+    mode = sessionStorage.getItem('gh_mode') || 'normal';
+    var v = localStorage.getItem('gh_volume'); if (v !== null) vol = Number(v);
+  } catch (e) {}
+  if (!ok) location.replace('index.html');
+  window.GH_MODE = mode; window.GH_VOL = vol / 100;
+})();
+</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 <div id="err"></div>
@@ -1572,7 +1584,7 @@ let AC = null;
 function snd(f, d, ty, v) {
   if (!AC) return;
   const o = AC.createOscillator(), g = AC.createGain(); o.type = ty || 'sine'; o.frequency.value = f;
-  g.gain.setValueAtTime(v || 0.1, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+ g.gain.setValueAtTime((v || 0.1) * (window.GH_VOL === undefined ? 1 : window.GH_VOL), AC.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
   o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
 }
 function hiss(d) {
@@ -1840,7 +1852,7 @@ function pickPatrol() {
   return [choice.x, choice.z, choice.y];
 }
 const GR = { x: 7.3, z: 26, y: F2, ry: 2.76, st: 'wait', t: 8, path: null, pi: 0, pg: null, pgoal: null, lose: 0, rp: 0, cd: 0, look: 0, knows: false, openT: 0, lx: 0, lz: 0, ly: 0, stepT: 0 };
-function grSpeed() { return (GR.st === 'chase' ? 5.4 : GR.st === 'investigate' ? 3.6 : 2.6) * (1 + 0.08 * (day - 1)); }
+function grSpeed() { return (GR.st === 'chase' ? 5.4 : GR.st === 'investigate' ? 3.6 : 2.6) * (1 + 0.08 * (day - 1)) * (window.GH_MODE === 'nightmare' ? 1.35 : 1); }
 function los(ax, az, bx, bz, lv) {
   const d = Math.hypot(bx - ax, bz - az), n = Math.ceil(d / 0.5);
   for (let i = 1; i < n; i++) {
@@ -1863,7 +1875,7 @@ function canSee() {
   return los(GR.x, GR.z, PL.x, PL.z, GR.y < 7 ? 'G' : 'U');
 }
 function hitPlayer(force) {
-  GR.cd = 1.8; hp = force ? 0 : hp - 50;
+  GR.cd = 1.8; hp = (force || window.GH_MODE === 'nightmare') ? 0 : hp - 50;
   $('flash').style.opacity = 1; setTimeout(function () { $('flash').style.opacity = 0; }, 150); snd(60, 0.35, 'square', 0.3);
   if (hp <= 0) caught(); else { say('Granny đánh trúng bạn! Chạy đi!'); hud(); }
 }
@@ -2230,7 +2242,7 @@ function playFrame(dt) {
       if (searching.s.kind === 'pump') { const k = 1 - Math.max(0, searching.t) / 3, tr = searching.s.t; tr.inner.scale.y = 0.7 + 0.3 * k; tr.inner.position.y = -0.285 * (1 - k); }
       if (searching.t <= 0) { const q = searching.s; searching = null; if (q.kind === 'pump') finishPump(q.t); else finishSearch(q); }
     }
-    if (torchOn && !hidden) charge = Math.max(0, charge - dt * 0.7);
+ charge = Math.max(0, charge - dt * 0.7 * (window.GH_MODE === 'nightmare' ? 2 : 1));
     if (dizzy > 0) { dizzy -= dt; yaw += Math.sin(tt * 0.9) * 0.25 * Math.min(1, dizzy) * dt; } if (shake > 0) shake -= dt;
     if (underground) spiderUpdate(dt);
     if (day === 1 && !tripped && playT > 150 && GR.st === 'wait') GR.st = 'patrol';
