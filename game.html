@@ -1572,6 +1572,7 @@ let camY = SPAWN_Y + EYE, hasKey = false, hasPad = false, hasKho = false, khoOpe
 let escaped = false, over = false, hidden = false, hs = null, searching = null, day = 1, hp = 100, freeze = 0, noiseLvl = 0, msgT = 0, bob = 0, hudT = 0;
 let legs = 0, jump = null, shake = 0, dizzy = 0, underground = false, trans = null, playT = 0, bellT = 0, tripped = false, wireArmed = true, tt = 0;
 let story = 'i0', lastAdv = 0, wakeT = 0, bloodSeen = false, doorMsg = false, grannySeen = false, thoughtT = 0; const thoughtQ = [];
+  let death = null;
 const exitR = { x1: EXIT[0] - 2.1, x2: EXIT[0] + 2.1, z1: EXIT[1] - 0.6, z2: EXIT[1] + 0.6 };
 key.visible = false; batM.forEach(function (m) { m.visible = false; });   // vật phẩm giờ nằm trong nội thất
 const torch = new THREE.SpotLight(0xfff0d0, 2.2, 70, 0.5, 0.45, 1.2);
@@ -1874,11 +1875,7 @@ function canSee() {
   if (d > 9 && (Math.sin(GR.ry) * dx + Math.cos(GR.ry) * dz) / d < 0.34) return false;
   return los(GR.x, GR.z, PL.x, PL.z, GR.y < 7 ? 'G' : 'U');
 }
-function hitPlayer(force) {
-  GR.cd = 1.8; hp = (force || window.GH_MODE === 'nightmare') ? 0 : hp - 50;
-  $('flash').style.opacity = 1; setTimeout(function () { $('flash').style.opacity = 0; }, 150); snd(60, 0.35, 'square', 0.3);
-  if (hp <= 0) caught(); else { say('Granny đánh trúng bạn! Chạy đi!'); hud(); }
-}
+function hitPlayer(force) { startDeath(); }
 function banner(t, ms) { const b = $('day'); b.textContent = t; b.style.display = 'flex'; freeze = ms / 1000; }
 function caught() {
   day++; document.body.classList.remove('chase');
@@ -1891,6 +1888,78 @@ function caught() {
   GR.x = 7.3; GR.z = 26; GR.y = F2; GR.st = 'wait'; GR.t = 6; GR.path = null; GR.pg = null; GR.pgoal = null; GR.look = 0; GR.knows = false; GR.cd = 0; GR.lose = 0;
   wireArmed = true; WIRE.visible = true; bellT = 0;
   banner('NGÀY ' + day + '/5', 3000); hud();
+}
+  // ===== HOẠT CẢNH BỊ GRANNY ĐẬP GẬY VÀO ĐẦU =====
+function startDeath() {
+  if (death) return;
+  if (hidden) unhide();
+  searching = null; jump = null; GR.cd = 99;
+  document.body.classList.remove('chase');
+  freeze = 1e9; msgT = 99;
+  $('msg').style.display = 'none'; $('thought').style.display = 'none'; thoughtQ.length = 0; thoughtT = 0;
+  $('hud').style.display = 'none'; $('cross').style.display = 'none';
+  const dx = PL.x - GR.x, dz = PL.z - GR.z, d = Math.hypot(dx, dz) || 1;
+  death = { t: 0, hit: false, p0: pitch, y0: yaw, ty: Math.atan2(dx, dz), c0: camY, ux: dx / d, uz: dz / d, b1: 0, b2: 0, b3: 0 };
+  GR.path = null; GR.pg = null; GR.pgoal = null; GR.look = 0; GR.st = 'wait'; GR.t = 1e9;
+  torch.visible = false;
+  snd(110, 0.6, 'sawtooth', 0.14); snd(147, 0.6, 'sawtooth', 0.1);
+}
+function deathFrame(dt) {
+  const dh = death; dh.t += dt; const t = dh.t;
+  const sm = function (k) { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); };
+  // Granny quay mặt vào bạn, bước lại gần
+  const dx = PL.x - GR.x, dz = PL.z - GR.z, cur = Math.hypot(dx, dz) || 1;
+  if (cur > 2.1 && !dh.hit) { const s = Math.min(cur - 2.1, dt * 6); GR.x += dx / cur * s; GR.z += dz / cur * s; }
+  GR.y += (PL.y - GR.y) * Math.min(1, dt * 8);
+  let da = Math.atan2(dx, dz) - GR.ry; da = Math.atan2(Math.sin(da), Math.cos(da)); GR.ry += da * Math.min(1, dt * 10);
+  // tay cầm gậy: giơ cao rồi bổ xuống
+  if (GRANNY_ANIM) {
+    const wind = sm((t - 0.15) / 0.75), strike = sm((t - 0.9) / 0.1);
+    GRANNY_ANIM.torso.rotation.x = 0.32 - 0.38 * wind + 0.95 * strike;
+    GRANNY_ANIM.arms.forEach(function (a) {
+      if (a.side > 0) {
+        const x1 = a.baseX + (-2.8 - a.baseX) * wind, e1 = a.elbowX + (-0.15 - a.elbowX) * wind;
+        a.sh.rotation.x = x1 + (-0.3 - x1) * strike; a.el.rotation.x = e1 + (-0.05 - e1) * strike;
+        a.sh.rotation.z = a.baseZ - 0.45 * strike;
+      } else { a.sh.rotation.x = a.baseX - 0.4 * wind; }
+    });
+  }
+  // camera: nhìn Granny, bị đập, ngã xuống, nhắm mắt
+  let y = dh.y0 + Math.atan2(Math.sin(dh.ty - dh.y0), Math.cos(dh.ty - dh.y0)) * sm(t / 0.5);
+  let p = dh.p0 + (0.3 - dh.p0) * sm(t / 0.7), cy0 = dh.c0, px = PL.x, pz = PL.z, roll = 0;
+  if (!dh.hit && t >= 1.0) {
+    dh.hit = true; $('flash').style.opacity = 1; setTimeout(function () { $('flash').style.opacity = 0.35; }, 150);
+    snd(55, 0.5, 'square', 0.35); snd(180, 0.2, 'sawtooth', 0.2); snd(1250, 1.8, 'sine', 0.05);
+  }
+  if (t >= 1.0) {
+    const k = sm((t - 1.0) / 2.5), snap = sm((t - 1.0) / 0.1);
+    y += 0.4 * snap + 0.5 * k;
+    p = 0.3 + (-0.45 - 0.3) * snap + 0.57 * k;
+    cy0 = dh.c0 + (PL.y + 0.45 - dh.c0) * k * k - 0.6 * snap * (1 - k);
+    roll = 1.45 * k + (t < 1.35 ? (Math.random() - 0.5) * 0.16 * (1 - (t - 1.0) / 0.35) : 0);
+    px = PL.x + dh.ux * 0.7 * k; pz = PL.z + dh.uz * 0.7 * k;
+    let amt = 1 - sm((t - 1.05) / 2.3); amt = Math.max(0, Math.min(1, amt + 0.12 * Math.sin(t * 11) * amt));
+    $('lid').style.display = 'block';
+    const lid = $('lid').children; lid[0].style.transform = 'translateY(' + (-amt * 100) + '%)'; lid[1].style.transform = 'translateY(' + (amt * 100) + '%)';
+    dom.style.filter = 'blur(' + Math.min(8, (t - 1) * 3.5).toFixed(1) + 'px) saturate(' + (1 - 0.5 * k).toFixed(2) + ')';
+    if (!dh.b1 && t > 1.8) { dh.b1 = 1; snd(58, 0.3, 'sine', 0.3); }
+    if (!dh.b2 && t > 2.6) { dh.b2 = 1; snd(52, 0.35, 'sine', 0.25); }
+    if (!dh.b3 && t > 3.6) { dh.b3 = 1; snd(46, 0.5, 'sine', 0.2); }
+  }
+  camera.position.set(px, cy0, pz); camera.rotation.set(p, y, roll);
+  if (t >= 4.6) endDeath();
+}
+function endDeath() {
+  death = null; dom.style.filter = ''; dom._f = undefined;
+  $('lid').style.display = 'none'; $('flash').style.opacity = 0;
+  $('hud').style.display = 'block'; $('cross').style.display = 'block';
+  hp = 0; caught();                 // sang ngày tiếp theo
+  if (!over) dizzy = 4;             // vừa tỉnh dậy: choáng khoảng 4 giây
+}
+function dayLook() {   // từ ngày 2: viền tối thu hẹp, tầm đèn pin ngắn dần
+  const k = Math.max(0, day - 1), inner = Math.max(8, 22 - 4 * k), mid = Math.max(30, 48 - 4 * k), a1 = Math.min(0.75, 0.5 + 0.06 * k);
+  $('dark').style.background = 'radial-gradient(circle at center,rgba(0,0,0,0) ' + inner + '%,rgba(0,0,0,' + a1 + ') ' + mid + '%,rgba(0,0,0,.95) 84%)';
+  torch.distance = Math.max(40, 70 - 8 * k);
 }
 function grannyUpdate(dt) {
   GR.cd -= dt; GR.rp -= dt;
@@ -1975,7 +2044,7 @@ function spiderUpdate(dt) {
 function applyLook() {
   const w = mode === 'walk';
 
-  scene.fog.density = underground ? 0.05 : (w ? 0.032 : 0.007);
+  scene.fog.density = (underground ? 0.05 : (w ? 0.032 : 0.007)) * (w ? 1 + 0.25 * (day - 1) : 1); dayLook();
 
   amb.intensity = underground ? 0.05 : (w ? 0.20 : 0.42);
   hemi.intensity = underground ? 0.03 : (w ? 0.18 : 0.34);
@@ -2351,13 +2420,15 @@ const clock = new THREE.Clock();
     if (mode === 'walk') {
       if (story === 'wake') { wakeFrame(dt); torch.visible = false; }
       else if (story !== 'play') { camera.position.set(13, F2 + 1.35, -3.0); camera.rotation.set(1.38, Math.PI, 0); torch.visible = false; }
+              else if (death) { deathFrame(dt); torch.visible = false; }
       else {
         playFrame(dt);
         torch.visible = torchOn && charge > 0 && !hidden;
         torch.intensity = charge < 15 ? 2.2 * (0.35 + Math.random() * 0.65) : 2.2;
         if (!jump) camY += ((hidden ? hs.base + EYE - 0.6 : PL.y + EYE) - camY) * Math.min(1, dt * 14);
         if (hidden) camera.position.set(hs.cx, camY, hs.cz); else camera.position.set(PL.x, camY + Math.sin(bob) * 0.06, PL.z);
-        const wob = dizzy > 0 ? Math.min(1, dizzy) : 0;
+               const mild = day > 1 ? Math.min(0.6, 0.3 * (day - 1)) : 0, wob = Math.max(dizzy > 0 ? Math.min(1, dizzy) : 0, mild);
+        $('dark').style.opacity = day > 1 ? (0.92 + 0.08 * Math.sin(tt * 1.3)).toFixed(3) : 1;
         camera.rotation.set(pitch, yaw, Math.sin(tt * 1.7) * 0.11 * wob + (shake > 0 ? (Math.random() - 0.5) * 0.06 * shake : 0));
         const tg = pickTarget();
         if (bloodSeen && !doorMsg && tg && (tg.type === 'dr' || tg.type === 'door')) { doorMsg = true; think('CHẢ LẼ MÌNH BỊ BÓC CẮT???'); }
@@ -2365,7 +2436,7 @@ const clock = new THREE.Clock();
         if (msgT <= 0 && !escaped && !over) { const m = $('msg'); if (tg) { m.textContent = tg.label; m.style.display = 'block'; } else m.style.display = 'none'; }
         hudT -= dt; if (hudT <= 0) { hudT = 0.5; hud(); }
         const gl = $('glitch'), gt = dizzy > 0 ? 0.6 : (underground ? 0.16 : 0); if (gl._o !== gt) { gl.style.opacity = gt; gl._o = gt; }
-        const fl = dizzy > 0 ? 'blur(1.5px) saturate(0.7)' : ''; if (dom._f !== fl) { dom.style.filter = fl; dom._f = fl; }
+                const fl = dizzy > 0 ? 'blur(1.5px) saturate(0.7)' : (day > 1 ? 'blur(0.4px) saturate(0.88)' : ''); if (dom._f !== fl) { dom.style.filter = fl; dom._f = fl; }
         if (underground) { dust.position.set(camera.position.x, camera.position.y, camera.position.z); dust.rotation.y += dt * 0.05; }
       }
       syncGranny(story === 'play' && GR.path && GR.pi < GR.path.length);
