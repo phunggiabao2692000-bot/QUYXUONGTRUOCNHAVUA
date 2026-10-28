@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nhà kinh dị - xem bản đồ</title>
+  #info,#hud{display:none !important}
 <style>
 body{margin:0;overflow:hidden;background:#000;font-family:'Segoe UI',Arial,sans-serif;color:#eee}
 #info{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);border:1px solid #555;padding:6px 10px;font-size:12px;line-height:1.6;max-width:330px;z-index:5}
@@ -2076,10 +2077,7 @@ function thoughtUpdate(dt) {
 }
 function hud() {
   $('hud').innerHTML = '📅 Ngày ' + Math.min(day, 5) + '/5 &nbsp; ❤️ ' + Math.max(0, hp) + '%<br>' +
-    (hasKey ? '🔑 Chìa khóa cửa chính: <b style="color:#ffd700">đã có</b>' : '🔑 Chìa khóa cửa chính: chưa có') + '<br>' +
-    (hasPad ? '🔓 Chìa khóa khóa móc: <b style="color:#ffd700">đã có</b>' : '🔓 Chìa khóa khóa móc: chưa có') + '<br>' +
-    (hasKho ? '🗝️ Chìa khóa kho: <b style="color:#ffd700">đã có</b>' : '🗝️ Chìa khóa kho: chưa có') + '<br>' +
-    '🔋 Pin: ' + bats + '/4<br>🔦 Đèn pin: ' + Math.round(charge) + '% <kbd>F</kbd>' +
+    '🔦 Đèn pin: ' + Math.round(charge) + '%' +
     (legs ? '<br>🦴 Chân gãy ×' + legs + ' (tốc độ ' + Math.round(spdMul() * 100) + '%)' : '');
 }
 function facing(cx, cz, d, thr) { if (d < 1.0) return true; const L = Math.hypot(cx - PL.x, cz - PL.z) || 1; return (-Math.sin(yaw) * (cx - PL.x) - Math.cos(yaw) * (cz - PL.z)) / L > (thr || 0.25); }
